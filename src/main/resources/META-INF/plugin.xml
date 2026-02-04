@@ -22,4 +22,8 @@
                 factoryClass="com.github.xepozz.maintainers.toolWindow.MaintainersToolWindowFactory"
         />
     </extensions>
+
+    <extensions defaultExtensionNs="com.github.xepozz.maintainers">
+        <maintainerProvider implementation="com.github.xepozz.maintainers.providers.composer.ComposerMaintainerProvider"/>
+    </extensions>
 </idea-plugin>
