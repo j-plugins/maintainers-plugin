@@ -16,6 +16,7 @@ data class Maintainer(
     val email: String? = null,
     val homepage: String? = null,
     val github: String? = null,
+    val icon: String? = null,
     val fundingLinks: List<FundingSource> = emptyList(),
     val packages: List<PackageInfo> = emptyList()
 )

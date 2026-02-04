@@ -1,14 +1,12 @@
 package com.github.xepozz.maintainers.toolWindow.details
 
 import com.github.xepozz.maintainers.model.PackageInfo
+import com.intellij.ui.HyperlinkLabel
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import java.awt.Component
-import java.awt.Cursor
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 
@@ -58,18 +56,14 @@ class PackagesSection : JPanel() {
         }
 
         if (!isExpanded && currentPackages.size > 5) {
-            val moreLabel = JBLabel("+ ${currentPackages.size - 5} more...").apply {
+            val moreLabel = HyperlinkLabel("+ ${currentPackages.size - 5} more...").apply {
                 alignmentX = Component.LEFT_ALIGNMENT
-                foreground = JBColor.namedColor("link.foreground", JBColor(0x589df6, 0x589df6))
-                cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-                addMouseListener(object : MouseAdapter() {
-                    override fun mouseClicked(e: MouseEvent) {
-                        isExpanded = true
-                        render()
-                        revalidate()
-                        repaint()
-                    }
-                })
+                addHyperlinkListener {
+                    isExpanded = true
+                    render()
+                    revalidate()
+                    repaint()
+                }
             }
             add(moreLabel)
         }

@@ -2,6 +2,7 @@ package com.github.xepozz.maintainers.toolWindow.tree
 
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
+import com.github.xepozz.maintainers.toolWindow.details.AvatarLoader
 import com.intellij.icons.AllIcons
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.SimpleTextAttributes
@@ -34,7 +35,32 @@ class MaintainersTreeCellRenderer : ColoredTreeCellRenderer() {
                 if (userObject.packages.isNotEmpty()) {
                     append(" (${userObject.packages.size})", SimpleTextAttributes.GRAYED_ATTRIBUTES)
                 }
-                icon = AllIcons.General.User
+                
+                val github = userObject.github
+                val iconUrl = userObject.icon
+                if (github != null) {
+                    val cachedIcon = AvatarLoader.getIconIfLoaded(github, 16)
+                    if (cachedIcon != null) {
+                        icon = cachedIcon
+                    } else {
+                        icon = AllIcons.General.User
+                        AvatarLoader.loadIcon(github, 16) {
+                            tree.repaint()
+                        }
+                    }
+                } else if (iconUrl != null) {
+                    val cachedIcon = AvatarLoader.getIconByUrlIfLoaded(iconUrl, 16)
+                    if (cachedIcon != null) {
+                        icon = cachedIcon
+                    } else {
+                        icon = AllIcons.General.User
+                        AvatarLoader.loadIconByUrl(iconUrl, 16) {
+                            tree.repaint()
+                        }
+                    }
+                } else {
+                    icon = AllIcons.General.User
+                }
             }
         }
     }

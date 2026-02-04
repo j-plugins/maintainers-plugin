@@ -63,6 +63,17 @@ class MaintainerDetailsPanel : JBScrollPane() {
             alignmentX = Component.LEFT_ALIGNMENT
         }
         val iconLabel = JBLabel(IconUtil.scale(AllIcons.General.User, null, 2f))
+        val githubUsername = maintainer.github
+        val iconUrl = maintainer.icon
+        if (githubUsername != null) {
+            AvatarLoader.loadIcon(githubUsername, 32) { icon ->
+                iconLabel.icon = icon
+            }
+        } else if (iconUrl != null) {
+            AvatarLoader.loadIconByUrl(iconUrl, 32) { icon ->
+                iconLabel.icon = icon
+            }
+        }
         headerPanel.add(iconLabel, BorderLayout.WEST)
 
         val nameSubtitlePanel = JPanel().apply {

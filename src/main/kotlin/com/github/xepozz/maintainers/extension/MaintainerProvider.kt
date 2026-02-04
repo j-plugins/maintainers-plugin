@@ -27,6 +27,7 @@ interface MaintainerProvider {
                                 email = existing.email ?: maintainer.email,
                                 homepage = existing.homepage ?: maintainer.homepage,
                                 github = existing.github ?: maintainer.github,
+                                icon = existing.icon ?: maintainer.icon,
                                 fundingLinks = (existing.fundingLinks + maintainer.fundingLinks).distinctBy { it.url }
                             )
                         }

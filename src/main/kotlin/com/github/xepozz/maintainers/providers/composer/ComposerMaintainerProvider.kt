@@ -42,6 +42,7 @@ class ComposerMaintainerProvider : MaintainerProvider {
             val version = pkg.get("version")?.asString ?: ""
             val url = pkg.getAsJsonObject("source")?.get("url")?.asString
                 ?: pkg.getAsJsonObject("support")?.get("source")?.asString
+            val orgIconUrl = extractOrgIconUrl(url)
 
             val funding = pkg.getAsJsonArray("funding")?.mapNotNull { fundingElement ->
                 if (fundingElement !is JsonObject) return@mapNotNull null
@@ -53,10 +54,14 @@ class ComposerMaintainerProvider : MaintainerProvider {
             val maintainers = pkg.getAsJsonArray("authors")?.mapNotNull { authorElement ->
                 if (authorElement !is JsonObject) return@mapNotNull null
                 val authorName = authorElement.get("name")?.asString ?: return@mapNotNull null
+                val homepage = authorElement.get("homepage")?.asString
+                val github = extractGithubUsername(homepage)
                 Maintainer(
                     name = authorName,
                     email = authorElement.get("email")?.asString,
-                    homepage = authorElement.get("homepage")?.asString,
+                    homepage = homepage,
+                    github = github,
+                    icon = if (github == null) orgIconUrl else null,
                     fundingLinks = funding
                 )
             } ?: emptyList()
@@ -69,5 +74,35 @@ class ComposerMaintainerProvider : MaintainerProvider {
                 maintainers = maintainers
             )
         }
+    }
+
+    private fun extractGithubUsername(homepage: String?): String? {
+        if (homepage == null) return null
+        val githubPrefix = "github.com/"
+        val index = homepage.indexOf(githubPrefix)
+        if (index == -1) return null
+        
+        val path = homepage.substring(index + githubPrefix.length).removeSuffix("/")
+        if (path.isEmpty()) return null
+        
+        // Take only the first part of the path (the username)
+        return path.split("/").firstOrNull()
+    }
+
+    private fun extractOrgIconUrl(sourceUrl: String?): String? {
+        if (sourceUrl == null) return null
+        val githubPrefix = "github.com/"
+        val index = sourceUrl.indexOf(githubPrefix)
+        if (index == -1) return null
+
+        val path = sourceUrl.substring(index + githubPrefix.length)
+            .removeSuffix(".git")
+            .removeSuffix("/")
+        if (path.isEmpty()) return null
+
+        val parts = path.split("/")
+        if (parts.size < 1) return null
+
+        return "https://github.com/${parts[0]}.png"
     }
 }
