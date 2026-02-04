@@ -17,7 +17,7 @@
         <toolWindow
                 id="Maintainers"
                 icon="/META-INF/pluginIcon.svg"
-                anchor="right"
+                anchor="bottom"
                 secondary="true"
                 canCloseContents="false"
                 factoryClass="com.github.xepozz.maintainers.toolWindow.MaintainersToolWindowFactory"
