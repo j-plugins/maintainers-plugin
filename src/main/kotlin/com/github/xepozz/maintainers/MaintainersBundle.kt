@@ -1,13 +1,13 @@
-package com.github.xepozz.maintainersplugin
+package com.github.xepozz.maintainers
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-private const val BUNDLE = "messages.MyBundle"
+private const val BUNDLE = "messages.MaintainersBundle"
 
-object MyBundle : DynamicBundle(BUNDLE) {
+object MaintainersBundle : DynamicBundle(BUNDLE) {
 
     @JvmStatic
     fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =

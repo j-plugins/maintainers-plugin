@@ -1,4 +1,4 @@
-package com.github.xepozz.maintainersplugin.startup
+package com.github.xepozz.maintainers.startup
 
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project

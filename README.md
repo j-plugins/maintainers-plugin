@@ -1,6 +1,6 @@
-# maintainers-plugin
+# Maintainers
 
-![Build](https://github.com/xepozz/maintainers-plugin/workflows/Build/badge.svg)
+![Build](https://github.com/j-plugins/maintainers-plugin/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
@@ -41,7 +41,7 @@ To keep everything working, do not remove `<!-- ... -->` sections.
 
 - Manually:
 
-  Download the [latest release](https://github.com/xepozz/maintainers-plugin/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/j-plugins/maintainers-plugin/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 

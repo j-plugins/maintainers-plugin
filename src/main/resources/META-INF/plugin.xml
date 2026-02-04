@@ -1,15 +1,15 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.xepozz.maintainersplugin</id>
-    <name>maintainers-plugin</name>
+    <id>com.github.xepozz.maintainers</id>
+    <name>Maintainers</name>
     <vendor>xepozz</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
+    <resource-bundle>messages.MaintainersBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.xepozz.maintainersplugin.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.xepozz.maintainersplugin.startup.MyProjectActivity" />
+        <toolWindow factoryClass="com.github.xepozz.maintainers.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <postStartupActivity implementation="com.github.xepozz.maintainers.startup.MyProjectActivity" />
     </extensions>
 </idea-plugin>
