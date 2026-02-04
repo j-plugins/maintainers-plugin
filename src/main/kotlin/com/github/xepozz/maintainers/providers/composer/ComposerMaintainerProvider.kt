@@ -56,8 +56,8 @@ class ComposerMaintainerProvider : MaintainerProvider {
                 Maintainer(
                     name = authorName,
                     email = authorElement.get("email")?.asString,
-                    url = authorElement.get("homepage")?.asString,
-                    funding = funding
+                    homepage = authorElement.get("homepage")?.asString,
+                    fundingLinks = funding
                 )
             } ?: emptyList()
 

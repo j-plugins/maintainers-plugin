@@ -5,12 +5,19 @@ data class FundingSource(
     val url: String
 )
 
+data class PackageInfo(
+    val name: String,
+    val version: String,
+    val role: String = "maintainer"
+)
+
 data class Maintainer(
     val name: String,
     val email: String? = null,
-    val url: String? = null,
-    val avatarUrl: String? = null,
-    val funding: List<FundingSource> = emptyList()
+    val homepage: String? = null,
+    val github: String? = null,
+    val fundingLinks: List<FundingSource> = emptyList(),
+    val packages: List<PackageInfo> = emptyList()
 )
 
 data class Dependency(

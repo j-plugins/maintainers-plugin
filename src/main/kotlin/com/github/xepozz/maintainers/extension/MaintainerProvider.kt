@@ -2,6 +2,7 @@ package com.github.xepozz.maintainers.extension
 
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
+import com.github.xepozz.maintainers.model.PackageInfo
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 
@@ -24,9 +25,9 @@ interface MaintainerProvider {
                         } else {
                             maintainerMap[key] = existing.copy(
                                 email = existing.email ?: maintainer.email,
-                                url = existing.url ?: maintainer.url,
-                                avatarUrl = existing.avatarUrl ?: maintainer.avatarUrl,
-                                funding = (existing.funding + maintainer.funding).distinctBy { it.url }
+                                homepage = existing.homepage ?: maintainer.homepage,
+                                github = existing.github ?: maintainer.github,
+                                fundingLinks = (existing.fundingLinks + maintainer.fundingLinks).distinctBy { it.url }
                             )
                         }
                         maintainerDependencies.getOrPut(key) { mutableSetOf() }.add(dependency)
@@ -34,7 +35,12 @@ interface MaintainerProvider {
                 }
             }
 
-            return maintainerMap.values.associateWith { maintainerDependencies[it.name]?.toList() ?: emptyList() }
+            return maintainerMap.values.map { maintainer ->
+                val dependencies = maintainerDependencies[maintainer.name] ?: emptySet()
+                maintainer.copy(
+                    packages = dependencies.map { PackageInfo(it.name, it.version) }
+                )
+            }.associateWith { maintainer -> maintainerDependencies[maintainer.name]?.toList() ?: emptyList() }
         }
     }
 
