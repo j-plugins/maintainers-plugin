@@ -7,10 +7,11 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import java.awt.Component
+import java.awt.FlowLayout
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 
-class PackagesSection : JPanel() {
+class PackagesSection(private val onPackageSelected: (String) -> Unit) : JPanel() {
     private var isExpanded = false
     private var currentPackages: List<PackageInfo> = emptyList()
 
@@ -48,11 +49,22 @@ class PackagesSection : JPanel() {
         }
 
         displayPackages.forEach { pkg ->
-            val label = JBLabel("• ${pkg.name} (${pkg.version})").apply {
+            val packagePanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
+                isOpaque = false
                 alignmentX = Component.LEFT_ALIGNMENT
-                border = JBUI.Borders.empty(2, 0)
+                add(JBLabel("• ").apply {
+                    border = JBUI.Borders.empty(2, 0)
+                })
+                add(HyperlinkLabel(pkg.name).apply {
+                    addHyperlinkListener { onPackageSelected(pkg.name) }
+                    border = JBUI.Borders.empty(2, 0)
+                })
+                add(JBLabel(" (${pkg.version})").apply {
+                    foreground = JBColor.GRAY
+                    border = JBUI.Borders.empty(2, 0)
+                })
             }
-            add(label)
+            add(packagePanel)
         }
 
         if (!isExpanded && currentPackages.size > 5) {

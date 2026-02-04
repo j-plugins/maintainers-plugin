@@ -15,6 +15,8 @@ import java.awt.*
 import javax.swing.*
 
 class MaintainerDetailsPanel : JBScrollPane() {
+    private var onPackageSelected: ((String) -> Unit)? = null
+
     private val rootPanel = object : JBPanel<JBPanel<*>>(), Scrollable {
         init {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -58,6 +60,10 @@ class MaintainerDetailsPanel : JBScrollPane() {
 
     fun updateMaintainer(maintainer: Maintainer?) {
         updateMaintainers(if (maintainer == null) emptyList() else listOf(maintainer))
+    }
+
+    fun setOnPackageSelected(callback: (String) -> Unit) {
+        this.onPackageSelected = callback
     }
 
     private fun addMaintainerSection(maintainer: Maintainer) {
@@ -128,7 +134,7 @@ class MaintainerDetailsPanel : JBScrollPane() {
 
         // Packages
         if (maintainer.packages.isNotEmpty()) {
-            val packagesSection = PackagesSection()
+            val packagesSection = PackagesSection { packageName -> onPackageSelected?.invoke(packageName) }
             packagesSection.update(maintainer.packages)
             rootPanel.add(packagesSection)
         }

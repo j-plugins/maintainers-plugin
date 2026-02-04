@@ -26,6 +26,7 @@ import java.awt.FlowLayout
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import javax.swing.tree.TreePath
 
 class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindowPanel(true, true) {
     private val treeModel = MaintainersTreeModel()
@@ -42,6 +43,10 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         setupTree()
         setupToolbar()
         
+        detailsPanel.setOnPackageSelected { packageName ->
+            selectDependency(packageName)
+        }
+
         val splitter = JBSplitter(false, 0.35f)
         splitter.firstComponent = JBScrollPane(tree)
         splitter.secondComponent = detailsPanel
@@ -129,5 +134,20 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val fundingCount = filteredMap.keys.count { it.fundingLinks.isNotEmpty() }
         
         statusLabel.text = "$maintainersCount maintainers • $packagesCount packages • $fundingCount with funding"
+    }
+
+    private fun selectDependency(packageName: String) {
+        val root = treeModel.root as? MaintainersTreeNode ?: return
+        val dependenciesNode = root.children().asSequence()
+            .filterIsInstance<MaintainersTreeNode>()
+            .find { it.userObject is String && (it.userObject as String).startsWith("Dependencies") } ?: return
+
+        val dependencyNode = dependenciesNode.children().asSequence()
+            .filterIsInstance<MaintainersTreeNode>()
+            .find { (it.userObject as? Dependency)?.name == packageName } ?: return
+
+        val path = TreePath(treeModel.getPathToRoot(dependencyNode))
+        tree.selectionPath = path
+        tree.scrollPathToVisible(path)
     }
 }

@@ -40,6 +40,7 @@ class FundingSection : JPanel() {
         val buttonsPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.X_AXIS)
             isOpaque = false
+            border = JBUI.Borders.empty(5, 0)
         }
         
         fundingLinks.forEachIndexed { index, link ->
