@@ -8,8 +8,18 @@
 
     <resource-bundle>messages.MaintainersBundle</resource-bundle>
 
+    <extensionPoints>
+        <extensionPoint name="maintainerProvider" interface="com.github.xepozz.maintainers.extension.MaintainerProvider"
+                        dynamic="true"/>
+    </extensionPoints>
+
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.xepozz.maintainers.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.xepozz.maintainers.startup.MyProjectActivity" />
+        <toolWindow
+                id="Maintainers"
+                anchor="right"
+                secondary="true"
+                canCloseContents="false"
+                factoryClass="com.github.xepozz.maintainers.toolWindow.MaintainersToolWindowFactory"
+        />
     </extensions>
 </idea-plugin>
