@@ -77,26 +77,24 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     }
 
     private fun setupToolbar() {
-        val refreshAction = object : AnAction("Refresh", "Refresh maintainers list", AllIcons.Actions.Refresh) {
-            override fun actionPerformed(e: AnActionEvent) {
-                refresh()
-            }
-        }
-        
-        val settingsAction = object : AnAction("Settings", "Settings", AllIcons.General.GearPlain) {
-            override fun actionPerformed(e: AnActionEvent) {
-                // Settings action
-            }
+        val actionGroup = DefaultActionGroup().apply {
+            add(object : AnAction("Refresh", "Refresh maintainers list", AllIcons.Actions.Refresh) {
+                override fun actionPerformed(e: AnActionEvent) = refresh()
+            })
+            add(object : AnAction("Settings", "Settings", AllIcons.General.GearPlain) {
+                override fun actionPerformed(e: AnActionEvent) {
+                    // Settings action
+                }
+            })
         }
 
-        val toolbarPanel = JPanel(BorderLayout())
-        toolbarPanel.add(searchField, BorderLayout.CENTER)
-        
-        val buttonsPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 0, 0))
-        buttonsPanel.add(ActionButton(refreshAction, refreshAction.templatePresentation, ActionPlaces.TOOLBAR, ActionToolbar.DEFAULT_MINIMUM_BUTTON_SIZE))
-        buttonsPanel.add(ActionButton(settingsAction, settingsAction.templatePresentation, ActionPlaces.TOOLBAR, ActionToolbar.DEFAULT_MINIMUM_BUTTON_SIZE))
-        
-        toolbarPanel.add(buttonsPanel, BorderLayout.EAST)
+        val actionToolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true)
+        actionToolbar.targetComponent = this
+
+        val toolbarPanel = JBUI.Panels.simplePanel(searchField)
+            .addToRight(actionToolbar.component)
+            .withBorder(JBUI.Borders.empty(2, 5))
+
         setToolbar(toolbarPanel)
 
         searchField.addDocumentListener(object : DocumentListener {
