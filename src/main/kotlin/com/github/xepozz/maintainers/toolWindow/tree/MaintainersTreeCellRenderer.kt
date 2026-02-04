@@ -4,8 +4,10 @@ import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.toolWindow.details.AvatarLoader
 import com.intellij.icons.AllIcons
+import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.SimpleTextAttributes
+import com.intellij.util.ui.tree.TreeUtil
 import javax.swing.JTree
 
 class MaintainersTreeCellRenderer : ColoredTreeCellRenderer() {
@@ -18,10 +20,17 @@ class MaintainersTreeCellRenderer : ColoredTreeCellRenderer() {
         row: Int,
         hasFocus: Boolean
     ) {
-        val node = value as? MaintainersTreeNode ?: return
-        val userObject = node.userObject
+        var userObject = TreeUtil.getUserObject(value) ?: return
+        if (userObject is NodeDescriptor<*>) {
+            userObject = userObject.element
+        }
 
         when (userObject) {
+            is GroupHeader -> {
+                append(userObject.title)
+                append(" (${userObject.count})", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                icon = if (userObject.title.startsWith("Dependencies")) AllIcons.Nodes.Package else AllIcons.General.User
+            }
             is String -> {
                 append(userObject)
                 icon = if (userObject.startsWith("Dependencies")) AllIcons.Nodes.Package else AllIcons.General.User

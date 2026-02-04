@@ -4,33 +4,37 @@ import com.github.xepozz.maintainers.extension.MaintainerProvider
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.toolWindow.details.MaintainerDetailsPanel
-import com.github.xepozz.maintainers.toolWindow.tree.MaintainersTreeCellRenderer
-import com.github.xepozz.maintainers.toolWindow.tree.MaintainersTreeModel
-import com.github.xepozz.maintainers.toolWindow.tree.MaintainersTreeNode
+import com.github.xepozz.maintainers.toolWindow.tree.*
 import com.intellij.icons.AllIcons
-import com.intellij.ide.util.treeView.TreeState
+import com.intellij.ide.util.treeView.NodeDescriptor
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
-import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Condition
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.SearchTextField
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.tree.AsyncTreeModel
+import com.intellij.ui.tree.FilteringTreeModel
+import com.intellij.ui.tree.StructureTreeModel
+import com.intellij.ui.tree.TreeVisitor
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.tree.TreeUtil
 import java.awt.BorderLayout
-import java.awt.FlowLayout
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.tree.TreePath
 
-class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindowPanel(true, true) {
-    private val treeModel = MaintainersTreeModel()
-    private val tree = Tree(treeModel)
+class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindowPanel(true, true), Disposable {
+    private val treeStructure = MaintainersTreeStructure(project)
+    private val structureModel = StructureTreeModel(treeStructure, this)
+    private val asyncTreeModel = AsyncTreeModel(structureModel, this)
+    private val tree = Tree(asyncTreeModel)
     private val detailsPanel = MaintainerDetailsPanel()
     private val statusLabel = JBLabel().apply {
         foreground = JBColor.GRAY
@@ -61,12 +65,18 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         refresh()
     }
 
+    override fun dispose() {
+    }
+
     private fun setupTree() {
         tree.cellRenderer = MaintainersTreeCellRenderer()
         tree.isRootVisible = false
         tree.selectionModel.addTreeSelectionListener {
-            val node = tree.lastSelectedPathComponent as? MaintainersTreeNode
-            val userObject = node?.userObject
+            var userObject = TreeUtil.getUserObject(tree.lastSelectedPathComponent)
+            if (userObject is NodeDescriptor<*>) {
+                userObject = userObject.element
+            }
+
             if (userObject is Maintainer) {
                 val aggregated = allMaintainerMap.keys.find { it.name == userObject.name } ?: userObject
                 detailsPanel.updateMaintainer(aggregated)
@@ -111,23 +121,24 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     private fun refresh() {
         allMaintainerMap = MaintainerProvider.getAggregatedMaintainers(project)
+        treeStructure.updateData(allMaintainerMap)
+        structureModel.invalidateAsync()
         applyFilter()
     }
 
     private fun applyFilter() {
-        val state = TreeState.createOn(tree)
-        val filter = searchField.text.lowercase()
-        val filteredMap = if (filter.isEmpty()) {
+        val filterText = searchField.text.lowercase()
+        treeStructure.setFilter(filterText)
+        structureModel.invalidateAsync()
+        
+        val filteredMap = if (filterText.isEmpty()) {
             allMaintainerMap
         } else {
             allMaintainerMap.filter { (maintainer, dependencies) ->
-                maintainer.name.lowercase().contains(filter) || 
-                        dependencies.any { it.name.lowercase().contains(filter) }
+                maintainer.name.lowercase().contains(filterText) || 
+                        dependencies.any { it.name.lowercase().contains(filterText) }
             }
         }
-        
-        treeModel.updateData(filteredMap)
-        state.applyTo(tree)
         
         val maintainersCount = filteredMap.size
         val packagesCount = filteredMap.values.flatten().distinctBy { it.name }.size
@@ -137,17 +148,18 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     }
 
     private fun selectDependency(packageName: String) {
-        val root = treeModel.root as? MaintainersTreeNode ?: return
-        val dependenciesNode = root.children().asSequence()
-            .filterIsInstance<MaintainersTreeNode>()
-            .find { it.userObject is String && (it.userObject as String).startsWith("Dependencies") } ?: return
-
-        val dependencyNode = dependenciesNode.children().asSequence()
-            .filterIsInstance<MaintainersTreeNode>()
-            .find { (it.userObject as? Dependency)?.name == packageName } ?: return
-
-        val path = TreePath(treeModel.getPathToRoot(dependencyNode))
-        tree.selectionPath = path
-        tree.scrollPathToVisible(path)
+        TreeUtil.promiseSelect(tree, object : TreeVisitor {
+            override fun visit(path: TreePath): TreeVisitor.Action {
+                var userObject = TreeUtil.getUserObject(path.lastPathComponent)
+                if (userObject is NodeDescriptor<*>) {
+                    userObject = userObject.element
+                }
+                
+                if (userObject is Dependency && userObject.name == packageName) {
+                    return TreeVisitor.Action.INTERRUPT
+                }
+                return TreeVisitor.Action.CONTINUE
+            }
+        })
     }
 }
