@@ -40,6 +40,8 @@ class ComposerMaintainerProvider : MaintainerProvider {
         return allPackages.mapNotNull { pkg ->
             val name = pkg.get("name")?.asString ?: return@mapNotNull null
             val version = pkg.get("version")?.asString ?: ""
+            val url = pkg.getAsJsonObject("source")?.get("url")?.asString
+                ?: pkg.getAsJsonObject("support")?.get("source")?.asString
 
             val funding = pkg.getAsJsonArray("funding")?.mapNotNull { fundingElement ->
                 if (fundingElement !is JsonObject) return@mapNotNull null
@@ -63,6 +65,7 @@ class ComposerMaintainerProvider : MaintainerProvider {
                 name = name,
                 version = version,
                 source = "composer",
+                url = url,
                 maintainers = maintainers
             )
         }
