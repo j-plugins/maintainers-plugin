@@ -4,11 +4,13 @@ import com.github.xepozz.maintainers.model.FundingSource
 import com.intellij.ide.BrowserUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import java.awt.Component
-import java.awt.FlowLayout
+import java.awt.Dimension
 import java.util.*
+import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JPanel
@@ -35,18 +37,30 @@ class FundingSection : JPanel() {
         }
         add(header)
 
-        val buttonsPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 5)).apply {
+        val buttonsPanel = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.X_AXIS)
             isOpaque = false
-            alignmentX = Component.LEFT_ALIGNMENT
         }
         
-        fundingLinks.forEach { link ->
+        fundingLinks.forEachIndexed { index, link ->
             val button = JButton(link.type.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }).apply {
                 addActionListener { BrowserUtil.browse(link.url) }
             }
             buttonsPanel.add(button)
+            if (index < fundingLinks.size - 1) {
+                buttonsPanel.add(Box.createRigidArea(Dimension(5, 0)))
+            }
         }
-        add(buttonsPanel)
+        
+        val scrollPane = JBScrollPane(buttonsPanel).apply {
+            verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_NEVER
+            horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+            border = JBUI.Borders.empty()
+            isOpaque = false
+            viewport.isOpaque = false
+            alignmentX = Component.LEFT_ALIGNMENT
+        }
+        add(scrollPane)
         
         revalidate()
         repaint()

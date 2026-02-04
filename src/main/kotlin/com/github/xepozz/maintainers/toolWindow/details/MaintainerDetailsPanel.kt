@@ -11,22 +11,26 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
-import java.awt.BorderLayout
-import java.awt.Component
-import java.awt.Dimension
-import java.awt.FlowLayout
-import javax.swing.BoxLayout
-import javax.swing.JPanel
-import javax.swing.JSeparator
+import java.awt.*
+import javax.swing.*
 
 class MaintainerDetailsPanel : JBScrollPane() {
-    private val rootPanel = JBPanel<JBPanel<*>>().apply {
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        border = JBUI.Borders.empty(20)
-        isOpaque = false
+    private val rootPanel = object : JBPanel<JBPanel<*>>(), Scrollable {
+        init {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            border = JBUI.Borders.empty(20)
+            isOpaque = false
+        }
+
+        override fun getPreferredScrollableViewportSize(): Dimension = preferredSize
+        override fun getScrollableUnitIncrement(visibleRect: Rectangle?, orientation: Int, direction: Int): Int = 10
+        override fun getScrollableBlockIncrement(visibleRect: Rectangle?, orientation: Int, direction: Int): Int = 100
+        override fun getScrollableTracksViewportWidth(): Boolean = true
+        override fun getScrollableTracksViewportHeight(): Boolean = false
     }
 
     init {
+        horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
         val wrapper = JBUI.Panels.simplePanel()
         wrapper.addToTop(rootPanel)
         setViewportView(wrapper)
