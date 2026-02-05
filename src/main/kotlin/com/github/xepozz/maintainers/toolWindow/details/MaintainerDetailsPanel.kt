@@ -1,6 +1,7 @@
 package com.github.xepozz.maintainers.toolWindow.details
 
 import com.github.xepozz.maintainers.model.Maintainer
+import com.github.xepozz.maintainers.model.MaintainersStats
 import com.intellij.icons.AllIcons
 import com.intellij.ide.BrowserUtil
 import com.intellij.ui.HyperlinkLabel
@@ -60,6 +61,13 @@ class MaintainerDetailsPanel : JBScrollPane() {
 
     fun updateMaintainer(maintainer: Maintainer?) {
         updateMaintainers(if (maintainer == null) emptyList() else listOf(maintainer))
+    }
+
+    fun showEmptyState(stats: MaintainersStats, onFilterFunding: () -> Unit, onMaintainerClick: (Maintainer) -> Unit) {
+        rootPanel.removeAll()
+        rootPanel.add(EmptyStatePanel(stats, onFilterFunding, onMaintainerClick))
+        rootPanel.revalidate()
+        rootPanel.repaint()
     }
 
     fun setOnPackageSelected(callback: (String) -> Unit) {

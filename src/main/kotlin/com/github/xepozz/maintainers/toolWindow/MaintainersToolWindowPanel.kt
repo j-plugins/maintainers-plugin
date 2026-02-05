@@ -3,6 +3,7 @@ package com.github.xepozz.maintainers.toolWindow
 import com.github.xepozz.maintainers.extension.MaintainerProvider
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
+import com.github.xepozz.maintainers.model.MaintainersStats
 import com.github.xepozz.maintainers.toolWindow.details.MaintainerDetailsPanel
 import com.github.xepozz.maintainers.toolWindow.tree.*
 import com.intellij.icons.AllIcons
@@ -42,6 +43,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     }
     private val searchField = SearchTextField()
     private var allMaintainerMap: Map<Maintainer, List<Dependency>> = emptyMap()
+    private var currentStats: MaintainersStats? = null
 
     init {
         setupTree()
@@ -86,9 +88,39 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
                 }
                 detailsPanel.updateMaintainers(maintainers)
             } else {
-                detailsPanel.updateMaintainer(null)
+                showEmptyState()
             }
         }
+    }
+
+    private fun showEmptyState() {
+        val stats = currentStats ?: return
+        detailsPanel.showEmptyState(
+            stats,
+            onFilterFunding = {
+                searchField.text = "is:funding"
+                applyFilter()
+            },
+            onMaintainerClick = { maintainer ->
+                selectMaintainer(maintainer)
+            }
+        )
+    }
+
+    private fun selectMaintainer(maintainer: Maintainer) {
+        TreeUtil.promiseSelect(tree, object : TreeVisitor {
+            override fun visit(path: TreePath): TreeVisitor.Action {
+                var userObject = TreeUtil.getUserObject(path.lastPathComponent)
+                if (userObject is NodeDescriptor<*>) {
+                    userObject = userObject.element
+                }
+
+                if (userObject is Maintainer && userObject.name == maintainer.name) {
+                    return TreeVisitor.Action.INTERRUPT
+                }
+                return TreeVisitor.Action.CONTINUE
+            }
+        })
     }
 
     private fun setupToolbar() {
@@ -121,9 +153,23 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     private fun refresh() {
         allMaintainerMap = MaintainerProvider.getAggregatedMaintainers(project)
+        
+        val maintainersCount = allMaintainerMap.size
+        val packagesCount = allMaintainerMap.values.flatten().distinctBy { it.name }.size
+        val fundingCount = allMaintainerMap.keys.count { it.fundingLinks.isNotEmpty() }
+        val topMaintainers = allMaintainerMap.keys
+            .sortedByDescending { it.packages.size }
+            .take(3)
+        
+        currentStats = MaintainersStats(maintainersCount, packagesCount, fundingCount, topMaintainers)
+
         treeStructure.updateData(allMaintainerMap)
         structureModel.invalidateAsync()
         applyFilter()
+
+        if (tree.selectionCount == 0) {
+            showEmptyState()
+        }
     }
 
     private fun applyFilter() {
@@ -133,6 +179,8 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         
         val filteredMap = if (filterText.isEmpty()) {
             allMaintainerMap
+        } else if (filterText == "is:funding") {
+            allMaintainerMap.filter { it.key.fundingLinks.isNotEmpty() }
         } else {
             allMaintainerMap.filter { (maintainer, dependencies) ->
                 maintainer.name.lowercase().contains(filterText) || 

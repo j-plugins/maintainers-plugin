@@ -28,3 +28,10 @@ data class Dependency(
     val url: String? = null,
     val maintainers: List<Maintainer> = emptyList()
 )
+
+data class MaintainersStats(
+    val maintainersCount: Int,
+    val packagesCount: Int,
+    val withFundingCount: Int,
+    val topMaintainers: List<Maintainer>
+)

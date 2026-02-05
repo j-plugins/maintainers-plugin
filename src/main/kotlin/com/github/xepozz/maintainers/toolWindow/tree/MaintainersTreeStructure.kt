@@ -61,6 +61,7 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
     private fun getFilteredMap(): Map<Maintainer, List<Dependency>> {
         val text = filterText
         if (text.isEmpty()) return maintainerMap
+        if (text == "is:funding") return maintainerMap.filter { it.key.fundingLinks.isNotEmpty() }
         
         return maintainerMap.filter { (maintainer, dependencies) ->
             maintainer.name.lowercase().contains(text) || 
