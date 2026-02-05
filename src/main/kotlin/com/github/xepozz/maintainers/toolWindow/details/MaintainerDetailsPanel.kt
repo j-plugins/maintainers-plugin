@@ -3,6 +3,7 @@ package com.github.xepozz.maintainers.toolWindow.details
 import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.MaintainersStats
+import com.github.xepozz.maintainers.util.deduplicateLinks
 import com.intellij.icons.AllIcons
 import com.intellij.ide.BrowserUtil
 import com.intellij.ui.HyperlinkLabel
@@ -120,11 +121,14 @@ class MaintainerDetailsPanel : JBScrollPane() {
         maintainer.email?.let { email ->
             contactPanel.add(createContactLine(AllIcons.Ide.External_link_arrow, email, "mailto:$email"))
         }
-        maintainer.homepage?.let { homepage ->
-            contactPanel.add(createContactLine(AllIcons.Ide.External_link_arrow, homepage, homepage))
-        }
-        maintainer.github?.let { github ->
-            contactPanel.add(createContactLine(AllIcons.Ide.External_link_arrow, "github.com/$github", "https://github.com/$github"))
+        val links = mutableListOf<String>()
+        maintainer.homepage?.let { links.add(it) }
+        maintainer.github?.let { links.add("https://github.com/$it") }
+
+        deduplicateLinks(links).forEach { link ->
+            val displayUrl = link
+            val fullUrl = if (!link.contains("://")) "https://$link" else link
+            contactPanel.add(createContactLine(AllIcons.Ide.External_link_arrow, displayUrl, fullUrl))
         }
         if (contactPanel.componentCount > 0) {
             rootPanel.add(contactPanel)
