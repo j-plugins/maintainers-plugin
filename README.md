@@ -18,7 +18,10 @@ One abandoned package can break your build. One mass-resignation can tank your s
 
 **What you get:**
 
-- Automatic parsing of lock files (`composer.lock` in PHP now, `npm`/`go`/`python` coming)
+- Automatic parsing of lock files:
+  - `composer.lock` for PHP
+  - `package-lock.json` for JavaScript
+  - `go.sum` for Go
 - GitHub avatars and org icons for instant recognition
 - Two views: browse by package or by maintainer
 - Direct links to funding pages — sponsor the people who keep your code running
