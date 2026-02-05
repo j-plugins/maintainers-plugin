@@ -2,24 +2,31 @@ package com.github.xepozz.maintainers.toolWindow
 
 import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.extension.MaintainerProvider
-import com.github.xepozz.maintainers.model.*
+import com.github.xepozz.maintainers.model.AggregatedData
+import com.github.xepozz.maintainers.model.Dependency
+import com.github.xepozz.maintainers.model.Maintainer
+import com.github.xepozz.maintainers.model.MaintainersStats
 import com.github.xepozz.maintainers.toolWindow.details.MaintainerDetailsPanel
-import com.github.xepozz.maintainers.toolWindow.tree.*
-import com.github.xepozz.maintainers.model.SearchFilter
+import com.github.xepozz.maintainers.toolWindow.tree.MaintainersTreeCellRenderer
+import com.github.xepozz.maintainers.toolWindow.tree.MaintainersTreeStructure
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.Separator
+import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.openapi.util.Condition
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.SearchTextField
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
-import com.intellij.ui.tree.FilteringTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.tree.TreeVisitor
 import com.intellij.ui.treeStructure.Tree
@@ -63,7 +70,8 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     private val splitter = JBSplitter(false, 0.35f).apply {
         firstComponent = JBScrollPane(tree)
         secondComponent = detailsContainer
-        dividerWidth = 1
+        dividerWidth = 2
+        divider.background = JBColor.namedColor("Borders.color", JBColor.LIGHT_GRAY)
     }
     private var detailsVisible = true
     private val statusLabel = JBLabel().apply {
@@ -136,10 +144,6 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val stats = currentStats ?: return
         detailsPanel.showEmptyState(
             stats,
-            onFilterFunding = {
-                searchField.text = "is:funding"
-                applyFilter()
-            },
             onMaintainerClick = { maintainer ->
                 selectMaintainer(maintainer)
             }
@@ -164,6 +168,19 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     private fun setupToolbar() {
         val actionGroup = DefaultActionGroup().apply {
+            add(object : ToggleAction(
+                MaintainersBundle.message("action.filter.funding.text"),
+                MaintainersBundle.message("action.filter.funding.description"),
+                AllIcons.Nodes.Favorite
+            ) {
+                override fun isSelected(e: AnActionEvent): Boolean {
+                    return com.github.xepozz.maintainers.model.SearchFilter.parse(searchField.text).fundingOnly
+                }
+
+                override fun setSelected(e: AnActionEvent, state: Boolean) {
+                    filterController?.onFundingToggle(state)
+                }
+            })
             add(object : AnAction(
                 MaintainersBundle.message("action.refresh.text"),
                 MaintainersBundle.message("action.refresh.description"),

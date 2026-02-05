@@ -4,7 +4,6 @@ import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.MaintainersStats
 import com.intellij.icons.AllIcons
-import com.intellij.ui.HyperlinkLabel
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
@@ -24,7 +23,6 @@ import javax.swing.SwingConstants
 
 class EmptyStatePanel(
     private val stats: MaintainersStats,
-    private val onFilterFunding: () -> Unit,
     private val onMaintainerClick: (Maintainer) -> Unit
 ) : JBPanel<EmptyStatePanel>(BorderLayout()) {
 
@@ -103,24 +101,6 @@ class EmptyStatePanel(
             })
             content.add(createSeparator())
         }
-
-        // Funding Section
-        content.add(JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            isOpaque = false
-            border = JBUI.Borders.empty(20, 0)
-            alignmentX = Component.CENTER_ALIGNMENT
-            
-            add(JBLabel(MaintainersBundle.message("empty.state.funding.sponsorship", stats.withFundingCount)).apply {
-                alignmentX = Component.CENTER_ALIGNMENT
-            })
-            add(HyperlinkLabel(MaintainersBundle.message("empty.state.funding.filter")).apply {
-                addHyperlinkListener { onFilterFunding() }
-                alignmentX = Component.CENTER_ALIGNMENT
-            })
-        })
-
-        content.add(createSeparator())
 
         // Hint Section
         content.add(JBLabel(MaintainersBundle.message("empty.state.select.hint")).apply {

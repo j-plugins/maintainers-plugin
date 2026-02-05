@@ -44,4 +44,15 @@ class SearchFilterController(
             isUpdating = false
         }
     }
+
+    fun onFundingToggle(selected: Boolean) {
+        isUpdating = true
+        try {
+            val filter = SearchFilter.parse(searchField.text)
+            val newFilter = filter.copy(fundingOnly = selected)
+            searchField.text = newFilter.toText()
+        } finally {
+            isUpdating = false
+        }
+    }
 }

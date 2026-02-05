@@ -14,8 +14,16 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
-import java.awt.*
-import javax.swing.*
+import java.awt.BorderLayout
+import java.awt.Component
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.Rectangle
+import javax.swing.BoxLayout
+import javax.swing.JPanel
+import javax.swing.JSeparator
+import javax.swing.ScrollPaneConstants
+import javax.swing.Scrollable
 
 class MaintainerDetailsPanel : JBScrollPane() {
     private var onPackageSelected: ((String) -> Unit)? = null
@@ -65,9 +73,9 @@ class MaintainerDetailsPanel : JBScrollPane() {
         updateMaintainers(if (maintainer == null) emptyList() else listOf(maintainer))
     }
 
-    fun showEmptyState(stats: MaintainersStats, onFilterFunding: () -> Unit, onMaintainerClick: (Maintainer) -> Unit) {
+    fun showEmptyState(stats: MaintainersStats, onMaintainerClick: (Maintainer) -> Unit) {
         rootPanel.removeAll()
-        rootPanel.add(EmptyStatePanel(stats, onFilterFunding, onMaintainerClick))
+        rootPanel.add(EmptyStatePanel(stats, onMaintainerClick))
         rootPanel.revalidate()
         rootPanel.repaint()
     }
