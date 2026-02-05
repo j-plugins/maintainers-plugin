@@ -14,6 +14,8 @@ import com.intellij.psi.search.GlobalSearchScope
 import java.io.InputStreamReader
 
 class ComposerMaintainerProvider : MaintainerProvider {
+    override val packageManager = ComposerPackageManager
+
     override fun getDependencies(project: Project): Collection<Dependency> {
         val lockFiles = FilenameIndex.getVirtualFilesByName("composer.lock", GlobalSearchScope.projectScope(project))
         return lockFiles.flatMap { parseLockFile(it) }
@@ -69,7 +71,7 @@ class ComposerMaintainerProvider : MaintainerProvider {
             Dependency(
                 name = name,
                 version = version,
-                source = ComposerPackageManager,
+                source = packageManager,
                 url = url,
                 maintainers = maintainers
             )

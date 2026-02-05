@@ -4,12 +4,17 @@ import com.github.xepozz.maintainers.model.AggregatedData
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.PackageInfo
+import com.github.xepozz.maintainers.model.PackageManager
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 
 interface MaintainerProvider {
     companion object {
         val EP_NAME = ExtensionPointName.create<MaintainerProvider>("com.github.xepozz.maintainers.maintainerProvider")
+
+        fun getAllPackageManagers(): Set<PackageManager> = EP_NAME.extensionList
+            .map { it.packageManager }
+            .toSet()
 
         fun getAggregatedData(project: Project): AggregatedData {
             val providers = EP_NAME.extensionList
@@ -55,4 +60,9 @@ interface MaintainerProvider {
      * Returns a collection of dependencies with their maintainers found in the project.
      */
     fun getDependencies(project: Project): Collection<Dependency>
+
+    /**
+     * The package manager associated with this provider.
+     */
+    val packageManager: com.github.xepozz.maintainers.model.PackageManager
 }

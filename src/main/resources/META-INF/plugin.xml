@@ -28,5 +28,6 @@
     <extensions defaultExtensionNs="com.github.xepozz.maintainers">
         <maintainerProvider implementation="com.github.xepozz.maintainers.providers.composer.ComposerMaintainerProvider"/>
         <maintainerProvider implementation="com.github.xepozz.maintainers.providers.npm.NpmMaintainerProvider"/>
+        <maintainerProvider implementation="com.github.xepozz.maintainers.providers.go.GoMaintainerProvider"/>
     </extensions>
 </idea-plugin>

@@ -14,6 +14,8 @@ import com.intellij.psi.search.GlobalSearchScope
 import java.io.InputStreamReader
 
 class NpmMaintainerProvider : MaintainerProvider {
+    override val packageManager = NpmPackageManager
+
     override fun getDependencies(project: Project): Collection<Dependency> {
         val lockFiles = FilenameIndex.getVirtualFilesByName("package-lock.json", GlobalSearchScope.projectScope(project))
         return lockFiles.flatMap { parseLockFile(it) }
@@ -47,7 +49,7 @@ class NpmMaintainerProvider : MaintainerProvider {
             Dependency(
                 name = name,
                 version = version,
-                source = NpmPackageManager,
+                source = packageManager,
                 url = resolved,
                 maintainers = maintainers
             )
