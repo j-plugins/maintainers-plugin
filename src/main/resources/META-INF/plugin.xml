@@ -16,7 +16,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow
                 id="Maintainers"
-                icon="/META-INF/pluginIcon.svg"
+                icon="/icons/maintainers/icon.svg"
                 anchor="bottom"
                 secondary="true"
                 canCloseContents="false"
