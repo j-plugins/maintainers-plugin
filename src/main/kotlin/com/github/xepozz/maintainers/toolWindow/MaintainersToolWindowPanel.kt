@@ -5,6 +5,7 @@ import com.github.xepozz.maintainers.extension.MaintainerProvider
 import com.github.xepozz.maintainers.model.*
 import com.github.xepozz.maintainers.toolWindow.details.MaintainerDetailsPanel
 import com.github.xepozz.maintainers.toolWindow.tree.*
+import com.github.xepozz.maintainers.model.SearchFilter
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.Disposable
@@ -26,6 +27,7 @@ import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.tree.TreeUtil
 import java.awt.BorderLayout
+import java.awt.FlowLayout
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -69,6 +71,8 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         border = JBUI.Borders.empty(4, 8)
     }
     private val searchField = SearchTextField()
+    private var filterController: SearchFilterController? = null
+    private var managerPanel: PackageManagerFilterPanel? = null
     private var aggregatedData: AggregatedData = AggregatedData(emptyMap(), emptyList())
     private var currentStats: MaintainersStats? = null
 
@@ -192,9 +196,19 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val actionToolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true)
         actionToolbar.targetComponent = this
 
-        val toolbarPanel = JBUI.Panels.simplePanel(searchField)
-            .addToRight(actionToolbar.component)
-            .withBorder(JBUI.Borders.empty(2, 5))
+        val toolbarPanel = JPanel(BorderLayout())
+        toolbarPanel.isOpaque = false
+        toolbarPanel.add(searchField, BorderLayout.CENTER)
+
+        val rightPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 0, 0))
+        rightPanel.isOpaque = false
+        managerPanel?.let {
+            rightPanel.add(it)
+        }
+        rightPanel.add(actionToolbar.component)
+        
+        toolbarPanel.add(rightPanel, BorderLayout.EAST)
+        toolbarPanel.border = JBUI.Borders.empty(2, 5)
 
         setToolbar(toolbarPanel)
 
@@ -208,6 +222,16 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     private fun refresh() {
         aggregatedData = MaintainerProvider.getAggregatedData(project)
         
+        val activeManagers = aggregatedData.allDependencies.map { it.source }.distinct().sortedBy { it.name }
+        if (managerPanel == null && activeManagers.isNotEmpty()) {
+            val panel = PackageManagerFilterPanel(activeManagers) { manager, selected ->
+                filterController?.onManagerToggle(manager, selected)
+            }
+            managerPanel = panel
+            filterController = SearchFilterController(searchField, panel) { applyFilter() }
+            setupToolbar() // Re-setup toolbar with new components
+        }
+
         val maintainerMap = aggregatedData.maintainerMap
         val maintainersCount = maintainerMap.size
         val packagesCount = aggregatedData.allDependencies.distinctBy { it.name }.size
@@ -228,30 +252,16 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     }
 
     private fun applyFilter() {
-        val filterText = searchField.text.lowercase()
-        treeStructure.setFilter(filterText)
+        val filter = com.github.xepozz.maintainers.model.SearchFilter.parse(searchField.text)
+        treeStructure.setFilter(filter)
         structureModel.invalidateAsync()
         
-        val filteredMap = if (filterText.isEmpty()) {
-            aggregatedData.maintainerMap
-        } else if (filterText == "is:funding") {
-            aggregatedData.maintainerMap.filter { it.key.fundingLinks.isNotEmpty() }
-        } else {
-            aggregatedData.maintainerMap.filter { (maintainer, dependencies) ->
-                maintainer.name.lowercase().contains(filterText) || 
-                        dependencies.any { it.name.lowercase().contains(filterText) }
-            }
+        val filteredMap = aggregatedData.maintainerMap.filter { (maintainer, dependencies) ->
+            matchesFilter(maintainer, dependencies, filter)
         }
 
-        val filteredDependencies = if (filterText.isEmpty()) {
-            aggregatedData.allDependencies
-        } else if (filterText == "is:funding") {
-            aggregatedData.allDependencies.filter { it.maintainers.any { m -> m.fundingLinks.isNotEmpty() } }
-        } else {
-            aggregatedData.allDependencies.filter { dependency ->
-                dependency.name.lowercase().contains(filterText) ||
-                        dependency.maintainers.any { it.name.lowercase().contains(filterText) }
-            }
+        val filteredDependencies = aggregatedData.allDependencies.filter { dependency ->
+            matchesDependencyFilter(dependency, filter)
         }
         
         val maintainersCount = filteredMap.size
@@ -259,6 +269,26 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val fundingCount = filteredMap.keys.count { it.fundingLinks.isNotEmpty() }
         
         statusLabel.text = MaintainersBundle.message("toolwindow.status", maintainersCount, packagesCount, fundingCount)
+    }
+
+    private fun matchesFilter(maintainer: Maintainer, dependencies: List<Dependency>, filter: com.github.xepozz.maintainers.model.SearchFilter): Boolean {
+        if (filter.fundingOnly && maintainer.fundingLinks.isEmpty()) return false
+        if (filter.packageManagers.isNotEmpty() && !maintainer.packages.any { it.packageManager.name in filter.packageManagers }) return false
+        
+        if (filter.textQuery.isEmpty()) return true
+        
+        return maintainer.name.lowercase().contains(filter.textQuery) || 
+                dependencies.any { it.name.lowercase().contains(filter.textQuery) }
+    }
+
+    private fun matchesDependencyFilter(dependency: Dependency, filter: com.github.xepozz.maintainers.model.SearchFilter): Boolean {
+        if (filter.fundingOnly && !dependency.maintainers.any { it.fundingLinks.isNotEmpty() }) return false
+        if (filter.packageManagers.isNotEmpty() && dependency.source.name !in filter.packageManagers) return false
+        
+        if (filter.textQuery.isEmpty()) return true
+        
+        return dependency.name.lowercase().contains(filter.textQuery) ||
+                dependency.maintainers.any { it.name.lowercase().contains(filter.textQuery) }
     }
 
     private fun selectDependency(packageName: String) {

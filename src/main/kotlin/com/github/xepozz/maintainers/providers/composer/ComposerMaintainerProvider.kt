@@ -69,7 +69,7 @@ class ComposerMaintainerProvider : MaintainerProvider {
             Dependency(
                 name = name,
                 version = version,
-                source = "composer",
+                source = ComposerPackageManager,
                 url = url,
                 maintainers = maintainers
             )

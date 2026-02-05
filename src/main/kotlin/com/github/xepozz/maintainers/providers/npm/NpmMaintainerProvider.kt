@@ -47,7 +47,7 @@ class NpmMaintainerProvider : MaintainerProvider {
             Dependency(
                 name = name,
                 version = version,
-                source = "npm",
+                source = NpmPackageManager,
                 url = resolved,
                 maintainers = maintainers
             )

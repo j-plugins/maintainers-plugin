@@ -3,6 +3,7 @@ package com.github.xepozz.maintainers.toolWindow.tree
 import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
+import com.github.xepozz.maintainers.model.SearchFilter
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.project.Project
@@ -18,9 +19,11 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
         allDependencies = allDeps
     }
 
-    fun setFilter(filter: String) {
-        filterText = filter.lowercase()
+    fun setFilter(filter: SearchFilter) {
+        currentFilter = filter
     }
+
+    private var currentFilter: SearchFilter = SearchFilter()
 
     override fun getRootElement(): Any = root
 
@@ -45,13 +48,12 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
                 }
             }
             is Dependency -> {
-                val text = filterText
-                if (text.isEmpty()) {
+                val filter = currentFilter
+                if (filter.textQuery.isEmpty() && !filter.fundingOnly && filter.packageManagers.isEmpty()) {
                     element.maintainers.toTypedArray()
                 } else {
-                    element.maintainers.filter { 
-                        it.name.lowercase().contains(text) || 
-                                it.packages.any { pkg -> pkg.name.lowercase().contains(text) }
+                    element.maintainers.filter { maintainer ->
+                        matchesFilter(maintainer, listOf(element), filter)
                     }.toTypedArray()
                 }
             }
@@ -60,25 +62,33 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
     }
 
     private fun getFilteredDependencies(): List<Dependency> {
-        val text = filterText
-        if (text.isEmpty()) return allDependencies
-        if (text == "is:funding") return allDependencies.filter { it.maintainers.any { m -> m.fundingLinks.isNotEmpty() } }
-
-        return allDependencies.filter { dependency ->
-            dependency.name.lowercase().contains(text) ||
-                    dependency.maintainers.any { it.name.lowercase().contains(text) }
-        }
+        return allDependencies.filter { matchesDependencyFilter(it, currentFilter) }
     }
 
     private fun getFilteredMap(): Map<Maintainer, List<Dependency>> {
-        val text = filterText
-        if (text.isEmpty()) return maintainerMap
-        if (text == "is:funding") return maintainerMap.filter { it.key.fundingLinks.isNotEmpty() }
-        
         return maintainerMap.filter { (maintainer, dependencies) ->
-            maintainer.name.lowercase().contains(text) || 
-                    dependencies.any { it.name.lowercase().contains(text) }
+            matchesFilter(maintainer, dependencies, currentFilter)
         }
+    }
+
+    private fun matchesFilter(maintainer: Maintainer, dependencies: List<Dependency>, filter: SearchFilter): Boolean {
+        if (filter.fundingOnly && maintainer.fundingLinks.isEmpty()) return false
+        if (filter.packageManagers.isNotEmpty() && !maintainer.packages.any { it.packageManager.name in filter.packageManagers }) return false
+
+        if (filter.textQuery.isEmpty()) return true
+
+        return maintainer.name.lowercase().contains(filter.textQuery) ||
+                dependencies.any { it.name.lowercase().contains(filter.textQuery) }
+    }
+
+    private fun matchesDependencyFilter(dependency: Dependency, filter: SearchFilter): Boolean {
+        if (filter.fundingOnly && !dependency.maintainers.any { it.fundingLinks.isNotEmpty() }) return false
+        if (filter.packageManagers.isNotEmpty() && dependency.source.name !in filter.packageManagers) return false
+
+        if (filter.textQuery.isEmpty()) return true
+
+        return dependency.name.lowercase().contains(filter.textQuery) ||
+                dependency.maintainers.any { it.name.lowercase().contains(filter.textQuery) }
     }
 
     override fun getParentElement(element: Any): Any? {

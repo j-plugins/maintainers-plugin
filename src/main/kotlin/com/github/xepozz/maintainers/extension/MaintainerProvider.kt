@@ -17,11 +17,6 @@ interface MaintainerProvider {
             return aggregate(allDependencies)
         }
 
-        @Deprecated("Use getAggregatedData instead", ReplaceWith("getAggregatedData(project).maintainerMap"))
-        fun getAggregatedMaintainers(project: Project): Map<Maintainer, List<Dependency>> {
-            return getAggregatedData(project).maintainerMap
-        }
-
         fun aggregate(allDependencies: Collection<Dependency>): AggregatedData {
             val maintainerMap = mutableMapOf<String, Maintainer>()
             val maintainerDependencies = mutableMapOf<String, MutableSet<Dependency>>()
@@ -48,7 +43,7 @@ interface MaintainerProvider {
             val finalMaintainerMap = maintainerMap.values.map { maintainer ->
                 val dependencies = maintainerDependencies[maintainer.name] ?: emptySet()
                 maintainer.copy(
-                    packages = dependencies.map { PackageInfo(it.name, it.version) }
+                    packages = dependencies.map { PackageInfo(it.name, it.version, it.source) }
                 )
             }.associateWith { maintainer -> maintainerDependencies[maintainer.name]?.toList() ?: emptyList() }
 
