@@ -37,7 +37,7 @@ class MaintainersTreeCellRenderer : ColoredTreeCellRenderer() {
             }
             is Dependency -> {
                 append(userObject.name)
-                icon = AllIcons.Nodes.Package
+                icon = userObject.source.icon
             }
             is Maintainer -> {
                 append(userObject.name)

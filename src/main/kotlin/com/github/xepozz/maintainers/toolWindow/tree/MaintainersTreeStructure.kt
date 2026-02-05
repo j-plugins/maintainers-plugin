@@ -73,7 +73,7 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
 
     private fun matchesFilter(maintainer: Maintainer, dependencies: List<Dependency>, filter: SearchFilter): Boolean {
         if (filter.fundingOnly && maintainer.fundingLinks.isEmpty()) return false
-        if (filter.packageManagers.isNotEmpty() && !maintainer.packages.any { it.packageManager.name in filter.packageManagers }) return false
+        if (filter.packageManagers.isNotEmpty() && !maintainer.packages.any { it.packageManager in filter.packageManagers }) return false
 
         if (filter.textQuery.isEmpty()) return true
 
@@ -83,7 +83,7 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
 
     private fun matchesDependencyFilter(dependency: Dependency, filter: SearchFilter): Boolean {
         if (filter.fundingOnly && !dependency.maintainers.any { it.fundingLinks.isNotEmpty() }) return false
-        if (filter.packageManagers.isNotEmpty() && dependency.source.name !in filter.packageManagers) return false
+        if (filter.packageManagers.isNotEmpty() && dependency.source !in filter.packageManagers) return false
 
         if (filter.textQuery.isEmpty()) return true
 

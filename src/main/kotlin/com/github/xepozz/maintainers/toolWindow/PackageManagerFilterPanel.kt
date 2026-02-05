@@ -46,9 +46,9 @@ class PackageManagerFilterPanel(
         }
     }
 
-    fun updateState(selectedManagers: Set<String>) {
+    fun updateState(selectedManagers: Set<PackageManager>) {
         buttons.forEach { (manager, button) ->
-            Toggleable.setSelected(button.presentation, selectedManagers.contains(manager.name))
+            Toggleable.setSelected(button.presentation, selectedManagers.contains(manager))
         }
         repaint()
     }

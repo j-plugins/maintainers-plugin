@@ -273,7 +273,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     private fun matchesFilter(maintainer: Maintainer, dependencies: List<Dependency>, filter: com.github.xepozz.maintainers.model.SearchFilter): Boolean {
         if (filter.fundingOnly && maintainer.fundingLinks.isEmpty()) return false
-        if (filter.packageManagers.isNotEmpty() && !maintainer.packages.any { it.packageManager.name in filter.packageManagers }) return false
+        if (filter.packageManagers.isNotEmpty() && !maintainer.packages.any { it.packageManager in filter.packageManagers }) return false
         
         if (filter.textQuery.isEmpty()) return true
         
@@ -283,7 +283,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     private fun matchesDependencyFilter(dependency: Dependency, filter: com.github.xepozz.maintainers.model.SearchFilter): Boolean {
         if (filter.fundingOnly && !dependency.maintainers.any { it.fundingLinks.isNotEmpty() }) return false
-        if (filter.packageManagers.isNotEmpty() && dependency.source.name !in filter.packageManagers) return false
+        if (filter.packageManagers.isNotEmpty() && dependency.source !in filter.packageManagers) return false
         
         if (filter.textQuery.isEmpty()) return true
         

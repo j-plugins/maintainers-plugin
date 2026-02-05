@@ -33,9 +33,9 @@ class SearchFilterController(
         try {
             val filter = SearchFilter.parse(searchField.text)
             val newManagers = if (selected) {
-                filter.packageManagers + manager.name
+                filter.packageManagers + manager
             } else {
-                filter.packageManagers - manager.name
+                filter.packageManagers - manager
             }
             val newFilter = filter.copy(packageManagers = newManagers)
             searchField.text = newFilter.toText()
