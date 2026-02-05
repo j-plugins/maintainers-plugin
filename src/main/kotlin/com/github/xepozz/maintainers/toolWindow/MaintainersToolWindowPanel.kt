@@ -23,6 +23,7 @@ import com.intellij.ui.tree.FilteringTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.tree.TreeVisitor
 import com.intellij.ui.treeStructure.Tree
+import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.tree.TreeUtil
 import java.awt.BorderLayout
@@ -37,6 +38,33 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     private val asyncTreeModel = AsyncTreeModel(structureModel, this)
     private val tree = Tree(asyncTreeModel)
     private val detailsPanel = MaintainerDetailsPanel()
+    private val closeActionToolbar = ActionManager.getInstance().createActionToolbar(
+        "DetailsHeader",
+        DefaultActionGroup(object : AnAction("Close", "Close details view", AllIcons.Actions.Close) {
+            override fun actionPerformed(e: AnActionEvent) {
+                tree.clearSelection()
+            }
+        }),
+        true
+    )
+    private val detailsHeader = JPanel(BorderLayout()).apply {
+        isOpaque = false
+        border = JBUI.Borders.empty(4, 8)
+        add(JBLabel("Details").apply {
+            font = JBFont.label().asBold()
+            foreground = JBColor.GRAY
+        }, BorderLayout.WEST)
+
+        closeActionToolbar.targetComponent = this
+        add(closeActionToolbar.component, BorderLayout.EAST)
+    }
+    private val detailsContainer = JBUI.Panels.simplePanel(detailsPanel).addToTop(detailsHeader)
+    private val splitter = JBSplitter(false, 0.35f).apply {
+        firstComponent = JBScrollPane(tree)
+        secondComponent = detailsContainer
+        dividerWidth = 1
+    }
+    private var detailsVisible = true
     private val statusLabel = JBLabel().apply {
         foreground = JBColor.GRAY
         border = JBUI.Borders.empty(4, 8)
@@ -53,11 +81,6 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             selectDependency(packageName)
         }
 
-        val splitter = JBSplitter(false, 0.35f)
-        splitter.firstComponent = JBScrollPane(tree)
-        splitter.secondComponent = detailsPanel
-        splitter.dividerWidth = 1
-
         val mainContentPanel = JPanel(BorderLayout())
         mainContentPanel.add(splitter, BorderLayout.CENTER)
         mainContentPanel.add(statusLabel, BorderLayout.SOUTH)
@@ -65,6 +88,14 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         setContent(mainContentPanel)
 
         refresh()
+    }
+
+    private fun setDetailsVisible(visible: Boolean) {
+        if (detailsVisible == visible) return
+        detailsVisible = visible
+        splitter.secondComponent = if (visible) detailsContainer else null
+        splitter.revalidate()
+        splitter.repaint()
     }
 
     override fun dispose() {
@@ -80,9 +111,13 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             }
 
             if (userObject is Maintainer) {
+                setDetailsVisible(true)
+                closeActionToolbar.component.isVisible = true
                 val aggregated = allMaintainerMap.keys.find { it.name == userObject.name } ?: userObject
                 detailsPanel.updateMaintainer(aggregated)
             } else if (userObject is Dependency) {
+                setDetailsVisible(true)
+                closeActionToolbar.component.isVisible = true
                 val maintainers = userObject.maintainers.map { author ->
                     allMaintainerMap.keys.find { it.name == author.name } ?: author
                 }
@@ -94,6 +129,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     }
 
     private fun showEmptyState() {
+        closeActionToolbar.component.isVisible = false
         val stats = currentStats ?: return
         detailsPanel.showEmptyState(
             stats,
@@ -128,6 +164,13 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             add(object : AnAction("Refresh", "Refresh maintainers list", AllIcons.Actions.Refresh) {
                 override fun actionPerformed(e: AnActionEvent) = refresh()
             })
+            add(object : ToggleAction("Show Details", "Show or hide details view", AllIcons.Actions.Preview) {
+                override fun isSelected(e: AnActionEvent): Boolean = detailsVisible
+                override fun setSelected(e: AnActionEvent, state: Boolean) {
+                    setDetailsVisible(state)
+                }
+            })
+            add(Separator())
             add(object : AnAction("Settings", "Settings", AllIcons.General.GearPlain) {
                 override fun actionPerformed(e: AnActionEvent) {
                     // Settings action
