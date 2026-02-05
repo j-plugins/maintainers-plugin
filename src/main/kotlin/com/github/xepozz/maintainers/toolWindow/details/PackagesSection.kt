@@ -1,5 +1,6 @@
 package com.github.xepozz.maintainers.toolWindow.details
 
+import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.PackageInfo
 import com.intellij.ui.HyperlinkLabel
 import com.intellij.ui.JBColor
@@ -35,7 +36,7 @@ class PackagesSection(private val onPackageSelected: (String) -> Unit) : JPanel(
         }
         isVisible = true
 
-        val header = JBLabel("PACKAGES").apply {
+        val header = JBLabel(MaintainersBundle.message("details.section.packages")).apply {
             font = JBFont.label().asBold()
             foreground = JBColor.namedColor("Label.disabledForeground", JBColor.GRAY)
             alignmentX = Component.LEFT_ALIGNMENT
@@ -68,7 +69,7 @@ class PackagesSection(private val onPackageSelected: (String) -> Unit) : JPanel(
         }
 
         if (!isExpanded && currentPackages.size > 5) {
-            val moreLabel = HyperlinkLabel("+ ${currentPackages.size - 5} more...").apply {
+            val moreLabel = HyperlinkLabel(MaintainersBundle.message("details.packages.more", currentPackages.size - 5)).apply {
                 alignmentX = Component.LEFT_ALIGNMENT
                 addHyperlinkListener {
                     isExpanded = true

@@ -29,7 +29,7 @@ class MaintainersTreeCellRenderer : ColoredTreeCellRenderer() {
             is GroupHeader -> {
                 append(userObject.title)
                 append(" (${userObject.count})", SimpleTextAttributes.GRAYED_ATTRIBUTES)
-                icon = if (userObject.title.startsWith("Dependencies")) AllIcons.Nodes.Package else AllIcons.General.User
+                icon = if (userObject.id == "dependencies") AllIcons.Nodes.Package else AllIcons.General.User
             }
             is String -> {
                 append(userObject)

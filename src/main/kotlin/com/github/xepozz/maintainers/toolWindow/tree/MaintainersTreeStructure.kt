@@ -1,5 +1,6 @@
 package com.github.xepozz.maintainers.toolWindow.tree
 
+import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
 import com.intellij.ide.util.treeView.AbstractTreeStructure
@@ -29,12 +30,12 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
                 val filteredMap = getFilteredMap()
                 val filteredDependencies = getFilteredDependencies()
                 arrayOf(
-                    GroupHeader("Dependencies", filteredDependencies.size),
-                    GroupHeader("Maintainers", filteredMap.size)
+                    GroupHeader("maintainers", MaintainersBundle.message("tree.group.maintainers"), filteredMap.size),
+                    GroupHeader("dependencies", MaintainersBundle.message("tree.group.dependencies"), filteredDependencies.size)
                 )
             }
             is GroupHeader -> {
-                if (element.title == "Dependencies") {
+                if (element.id == "dependencies") {
                     getFilteredDependencies()
                         .distinctBy { it.name }
                         .sortedBy { it.name }

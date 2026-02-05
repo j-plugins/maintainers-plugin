@@ -1,5 +1,6 @@
 package com.github.xepozz.maintainers.toolWindow.details
 
+import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.MaintainersStats
 import com.intellij.icons.AllIcons
@@ -43,7 +44,7 @@ class MaintainerDetailsPanel : JBScrollPane() {
     fun updateMaintainers(maintainers: List<Maintainer>) {
         rootPanel.removeAll()
         if (maintainers.isEmpty()) {
-            rootPanel.add(JBLabel("Select a package or maintainer to see details").apply {
+            rootPanel.add(JBLabel(MaintainersBundle.message("details.empty.selection")).apply {
                 alignmentX = Component.LEFT_ALIGNMENT
                 foreground = JBColor.GRAY
             })
@@ -101,7 +102,7 @@ class MaintainerDetailsPanel : JBScrollPane() {
                 font = JBFont.label().biggerOn(4f).asBold()
                 alignmentX = Component.LEFT_ALIGNMENT
             })
-            add(JBLabel("Maintainer of ${maintainer.packages.size} packages in project").apply {
+            add(JBLabel(MaintainersBundle.message("details.maintainer.packages.count", maintainer.packages.size)).apply {
                 foreground = JBColor.GRAY
                 alignmentX = Component.LEFT_ALIGNMENT
             })

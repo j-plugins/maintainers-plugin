@@ -1,5 +1,6 @@
 package com.github.xepozz.maintainers.toolWindow.details
 
+import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.MaintainersStats
 import com.intellij.icons.AllIcons
@@ -44,11 +45,11 @@ class EmptyStatePanel(
             isOpaque = false
             border = JBUI.Borders.emptyTop(20)
             alignmentX = Component.CENTER_ALIGNMENT
-            add(JBLabel("Your project depends on").apply {
+            add(JBLabel(MaintainersBundle.message("empty.state.depends.on")).apply {
                 foreground = JBColor.GRAY
                 alignmentX = Component.CENTER_ALIGNMENT
             })
-            add(JBLabel("${stats.maintainersCount} open source maintainers").apply {
+            add(JBLabel(MaintainersBundle.message("empty.state.maintainers.count", stats.maintainersCount)).apply {
                 font = JBFont.label().biggerOn(6f).asBold()
                 alignmentX = Component.CENTER_ALIGNMENT
             })
@@ -59,9 +60,9 @@ class EmptyStatePanel(
             isOpaque = false
             border = JBUI.Borders.empty(30, 0)
             alignmentX = Component.CENTER_ALIGNMENT
-            add(StatCard(stats.maintainersCount.toString(), "maintainers"))
-            add(StatCard(stats.packagesCount.toString(), "packages"))
-            add(StatCard(stats.withFundingCount.toString(), "with funding"))
+            add(StatCard(stats.maintainersCount.toString(), MaintainersBundle.message("empty.state.stat.maintainers")))
+            add(StatCard(stats.packagesCount.toString(), MaintainersBundle.message("empty.state.stat.packages")))
+            add(StatCard(stats.withFundingCount.toString(), MaintainersBundle.message("empty.state.stat.funding")))
         }
         content.add(statsPanel)
 
@@ -75,7 +76,7 @@ class EmptyStatePanel(
                 border = JBUI.Borders.empty(20, 0)
                 alignmentX = Component.CENTER_ALIGNMENT
                 
-                add(JBLabel("Top contributors:").apply {
+                add(JBLabel(MaintainersBundle.message("empty.state.top.contributors")).apply {
                     font = JBFont.label().asBold()
                     alignmentX = Component.CENTER_ALIGNMENT
                 })
@@ -110,10 +111,10 @@ class EmptyStatePanel(
             border = JBUI.Borders.empty(20, 0)
             alignmentX = Component.CENTER_ALIGNMENT
             
-            add(JBLabel("💚 ${stats.withFundingCount} maintainers accept sponsorship").apply {
+            add(JBLabel(MaintainersBundle.message("empty.state.funding.sponsorship", stats.withFundingCount)).apply {
                 alignmentX = Component.CENTER_ALIGNMENT
             })
-            add(HyperlinkLabel("Show only with funding").apply {
+            add(HyperlinkLabel(MaintainersBundle.message("empty.state.funding.filter")).apply {
                 addHyperlinkListener { onFilterFunding() }
                 alignmentX = Component.CENTER_ALIGNMENT
             })
@@ -122,7 +123,7 @@ class EmptyStatePanel(
         content.add(createSeparator())
 
         // Hint Section
-        content.add(JBLabel("← Select a maintainer to see details").apply {
+        content.add(JBLabel(MaintainersBundle.message("empty.state.select.hint")).apply {
             foreground = JBColor.GRAY
             border = JBUI.Borders.emptyTop(20)
             alignmentX = Component.CENTER_ALIGNMENT

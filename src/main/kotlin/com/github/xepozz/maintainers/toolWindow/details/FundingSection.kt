@@ -1,5 +1,6 @@
 package com.github.xepozz.maintainers.toolWindow.details
 
+import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.FundingSource
 import com.intellij.ide.BrowserUtil
 import com.intellij.ui.JBColor
@@ -30,7 +31,7 @@ class FundingSection : JPanel() {
         }
         isVisible = true
 
-        val header = JBLabel("FUNDING").apply {
+        val header = JBLabel(MaintainersBundle.message("details.section.funding")).apply {
             font = JBFont.label().asBold()
             foreground = JBColor.namedColor("Label.disabledForeground", JBColor.GRAY)
             alignmentX = Component.LEFT_ALIGNMENT

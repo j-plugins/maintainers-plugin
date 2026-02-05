@@ -1,5 +1,6 @@
 package com.github.xepozz.maintainers.toolWindow
 
+import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.extension.MaintainerProvider
 import com.github.xepozz.maintainers.model.*
 import com.github.xepozz.maintainers.toolWindow.details.MaintainerDetailsPanel
@@ -159,17 +160,29 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     private fun setupToolbar() {
         val actionGroup = DefaultActionGroup().apply {
-            add(object : AnAction("Refresh", "Refresh maintainers list", AllIcons.Actions.Refresh) {
+            add(object : AnAction(
+                MaintainersBundle.message("action.refresh.text"),
+                MaintainersBundle.message("action.refresh.description"),
+                AllIcons.Actions.Refresh
+            ) {
                 override fun actionPerformed(e: AnActionEvent) = refresh()
             })
-            add(object : ToggleAction("Show Details", "Show or hide details view", AllIcons.Actions.Preview) {
+            add(object : ToggleAction(
+                MaintainersBundle.message("action.show.details.text"),
+                MaintainersBundle.message("action.show.details.description"),
+                AllIcons.Actions.Preview
+            ) {
                 override fun isSelected(e: AnActionEvent): Boolean = detailsVisible
                 override fun setSelected(e: AnActionEvent, state: Boolean) {
                     setDetailsVisible(state)
                 }
             })
             add(Separator())
-            add(object : AnAction("Settings", "Settings", AllIcons.General.GearPlain) {
+            add(object : AnAction(
+                MaintainersBundle.message("action.settings.text"),
+                MaintainersBundle.message("action.settings.description"),
+                AllIcons.General.GearPlain
+            ) {
                 override fun actionPerformed(e: AnActionEvent) {
                     // Settings action
                 }
@@ -245,7 +258,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val packagesCount = filteredDependencies.distinctBy { it.name }.size
         val fundingCount = filteredMap.keys.count { it.fundingLinks.isNotEmpty() }
         
-        statusLabel.text = "$maintainersCount maintainers • $packagesCount packages • $fundingCount with funding"
+        statusLabel.text = MaintainersBundle.message("toolwindow.status", maintainersCount, packagesCount, fundingCount)
     }
 
     private fun selectDependency(packageName: String) {
