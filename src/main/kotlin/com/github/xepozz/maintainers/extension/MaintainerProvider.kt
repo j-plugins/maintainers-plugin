@@ -1,5 +1,6 @@
 package com.github.xepozz.maintainers.extension
 
+import com.github.xepozz.maintainers.model.AggregatedData
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.PackageInfo
@@ -10,38 +11,48 @@ interface MaintainerProvider {
     companion object {
         val EP_NAME = ExtensionPointName.create<MaintainerProvider>("com.github.xepozz.maintainers.maintainerProvider")
 
-        fun getAggregatedMaintainers(project: Project): Map<Maintainer, List<Dependency>> {
+        fun getAggregatedData(project: Project): AggregatedData {
             val providers = EP_NAME.extensionList
+            val allDependencies = providers.flatMap { it.getDependencies(project) }
+            return aggregate(allDependencies)
+        }
+
+        @Deprecated("Use getAggregatedData instead", ReplaceWith("getAggregatedData(project).maintainerMap"))
+        fun getAggregatedMaintainers(project: Project): Map<Maintainer, List<Dependency>> {
+            return getAggregatedData(project).maintainerMap
+        }
+
+        fun aggregate(allDependencies: Collection<Dependency>): AggregatedData {
             val maintainerMap = mutableMapOf<String, Maintainer>()
             val maintainerDependencies = mutableMapOf<String, MutableSet<Dependency>>()
 
-            providers.forEach { provider ->
-                provider.getDependencies(project).forEach { dependency ->
-                    dependency.maintainers.forEach { maintainer ->
-                        val key = maintainer.name
-                        val existing = maintainerMap[key]
-                        if (existing == null) {
-                            maintainerMap[key] = maintainer
-                        } else {
-                            maintainerMap[key] = existing.copy(
-                                email = existing.email ?: maintainer.email,
-                                homepage = existing.homepage ?: maintainer.homepage,
-                                github = existing.github ?: maintainer.github,
-                                icon = existing.icon ?: maintainer.icon,
-                                fundingLinks = (existing.fundingLinks + maintainer.fundingLinks).distinctBy { it.url }
-                            )
-                        }
-                        maintainerDependencies.getOrPut(key) { mutableSetOf() }.add(dependency)
+            allDependencies.forEach { dependency ->
+                dependency.maintainers.forEach { maintainer ->
+                    val key = maintainer.name
+                    val existing = maintainerMap[key]
+                    if (existing == null) {
+                        maintainerMap[key] = maintainer
+                    } else {
+                        maintainerMap[key] = existing.copy(
+                            email = existing.email ?: maintainer.email,
+                            homepage = existing.homepage ?: maintainer.homepage,
+                            github = existing.github ?: maintainer.github,
+                            icon = existing.icon ?: maintainer.icon,
+                            fundingLinks = (existing.fundingLinks + maintainer.fundingLinks).distinctBy { it.url }
+                        )
                     }
+                    maintainerDependencies.getOrPut(key) { mutableSetOf() }.add(dependency)
                 }
             }
 
-            return maintainerMap.values.map { maintainer ->
+            val finalMaintainerMap = maintainerMap.values.map { maintainer ->
                 val dependencies = maintainerDependencies[maintainer.name] ?: emptySet()
                 maintainer.copy(
                     packages = dependencies.map { PackageInfo(it.name, it.version) }
                 )
             }.associateWith { maintainer -> maintainerDependencies[maintainer.name]?.toList() ?: emptyList() }
+
+            return AggregatedData(finalMaintainerMap, allDependencies.toList())
         }
     }
 

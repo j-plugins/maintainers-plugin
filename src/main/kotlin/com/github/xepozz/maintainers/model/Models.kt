@@ -35,3 +35,8 @@ data class MaintainersStats(
     val withFundingCount: Int,
     val topMaintainers: List<Maintainer>
 )
+
+data class AggregatedData(
+    val maintainerMap: Map<Maintainer, List<Dependency>>,
+    val allDependencies: List<Dependency>
+)

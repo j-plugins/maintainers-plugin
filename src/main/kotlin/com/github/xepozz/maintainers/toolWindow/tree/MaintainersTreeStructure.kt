@@ -8,11 +8,13 @@ import com.intellij.openapi.project.Project
 
 class MaintainersTreeStructure(private val project: Project) : AbstractTreeStructure() {
     private var maintainerMap: Map<Maintainer, List<Dependency>> = emptyMap()
+    private var allDependencies: List<Dependency> = emptyList()
     private var filterText: String = ""
     private val root = Any()
 
-    fun updateData(newMap: Map<Maintainer, List<Dependency>>) {
+    fun updateData(newMap: Map<Maintainer, List<Dependency>>, allDeps: List<Dependency>) {
         maintainerMap = newMap
+        allDependencies = allDeps
     }
 
     fun setFilter(filter: String) {
@@ -25,22 +27,20 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
         return when (element) {
             root -> {
                 val filteredMap = getFilteredMap()
-                val dependenciesCount = filteredMap.values.flatten().distinctBy { it.name }.size
+                val filteredDependencies = getFilteredDependencies()
                 arrayOf(
-                    GroupHeader("Dependencies", dependenciesCount),
+                    GroupHeader("Dependencies", filteredDependencies.size),
                     GroupHeader("Maintainers", filteredMap.size)
                 )
             }
             is GroupHeader -> {
-                val filteredMap = getFilteredMap()
                 if (element.title == "Dependencies") {
-                    filteredMap.values
-                        .flatten()
+                    getFilteredDependencies()
                         .distinctBy { it.name }
                         .sortedBy { it.name }
                         .toTypedArray()
                 } else {
-                    filteredMap.keys.sortedByDescending { it.packages.size }.toTypedArray()
+                    getFilteredMap().keys.sortedByDescending { it.packages.size }.toTypedArray()
                 }
             }
             is Dependency -> {
@@ -55,6 +55,17 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
                 }
             }
             else -> emptyArray()
+        }
+    }
+
+    private fun getFilteredDependencies(): List<Dependency> {
+        val text = filterText
+        if (text.isEmpty()) return allDependencies
+        if (text == "is:funding") return allDependencies.filter { it.maintainers.any { m -> m.fundingLinks.isNotEmpty() } }
+
+        return allDependencies.filter { dependency ->
+            dependency.name.lowercase().contains(text) ||
+                    dependency.maintainers.any { it.name.lowercase().contains(text) }
         }
     }
 

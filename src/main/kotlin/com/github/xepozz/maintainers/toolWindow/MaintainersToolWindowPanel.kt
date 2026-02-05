@@ -1,9 +1,7 @@
 package com.github.xepozz.maintainers.toolWindow
 
 import com.github.xepozz.maintainers.extension.MaintainerProvider
-import com.github.xepozz.maintainers.model.Dependency
-import com.github.xepozz.maintainers.model.Maintainer
-import com.github.xepozz.maintainers.model.MaintainersStats
+import com.github.xepozz.maintainers.model.*
 import com.github.xepozz.maintainers.toolWindow.details.MaintainerDetailsPanel
 import com.github.xepozz.maintainers.toolWindow.tree.*
 import com.intellij.icons.AllIcons
@@ -70,7 +68,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         border = JBUI.Borders.empty(4, 8)
     }
     private val searchField = SearchTextField()
-    private var allMaintainerMap: Map<Maintainer, List<Dependency>> = emptyMap()
+    private var aggregatedData: AggregatedData = AggregatedData(emptyMap(), emptyList())
     private var currentStats: MaintainersStats? = null
 
     init {
@@ -113,13 +111,13 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             if (userObject is Maintainer) {
                 setDetailsVisible(true)
                 closeActionToolbar.component.isVisible = true
-                val aggregated = allMaintainerMap.keys.find { it.name == userObject.name } ?: userObject
+                val aggregated = aggregatedData.maintainerMap.keys.find { it.name == userObject.name } ?: userObject
                 detailsPanel.updateMaintainer(aggregated)
             } else if (userObject is Dependency) {
                 setDetailsVisible(true)
                 closeActionToolbar.component.isVisible = true
                 val maintainers = userObject.maintainers.map { author ->
-                    allMaintainerMap.keys.find { it.name == author.name } ?: author
+                    aggregatedData.maintainerMap.keys.find { it.name == author.name } ?: author
                 }
                 detailsPanel.updateMaintainers(maintainers)
             } else {
@@ -195,18 +193,19 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     }
 
     private fun refresh() {
-        allMaintainerMap = MaintainerProvider.getAggregatedMaintainers(project)
+        aggregatedData = MaintainerProvider.getAggregatedData(project)
         
-        val maintainersCount = allMaintainerMap.size
-        val packagesCount = allMaintainerMap.values.flatten().distinctBy { it.name }.size
-        val fundingCount = allMaintainerMap.keys.count { it.fundingLinks.isNotEmpty() }
-        val topMaintainers = allMaintainerMap.keys
+        val maintainerMap = aggregatedData.maintainerMap
+        val maintainersCount = maintainerMap.size
+        val packagesCount = aggregatedData.allDependencies.distinctBy { it.name }.size
+        val fundingCount = maintainerMap.keys.count { it.fundingLinks.isNotEmpty() }
+        val topMaintainers = maintainerMap.keys
             .sortedByDescending { it.packages.size }
             .take(3)
         
         currentStats = MaintainersStats(maintainersCount, packagesCount, fundingCount, topMaintainers)
 
-        treeStructure.updateData(allMaintainerMap)
+        treeStructure.updateData(maintainerMap, aggregatedData.allDependencies)
         structureModel.invalidateAsync()
         applyFilter()
 
@@ -221,18 +220,29 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         structureModel.invalidateAsync()
         
         val filteredMap = if (filterText.isEmpty()) {
-            allMaintainerMap
+            aggregatedData.maintainerMap
         } else if (filterText == "is:funding") {
-            allMaintainerMap.filter { it.key.fundingLinks.isNotEmpty() }
+            aggregatedData.maintainerMap.filter { it.key.fundingLinks.isNotEmpty() }
         } else {
-            allMaintainerMap.filter { (maintainer, dependencies) ->
+            aggregatedData.maintainerMap.filter { (maintainer, dependencies) ->
                 maintainer.name.lowercase().contains(filterText) || 
                         dependencies.any { it.name.lowercase().contains(filterText) }
             }
         }
+
+        val filteredDependencies = if (filterText.isEmpty()) {
+            aggregatedData.allDependencies
+        } else if (filterText == "is:funding") {
+            aggregatedData.allDependencies.filter { it.maintainers.any { m -> m.fundingLinks.isNotEmpty() } }
+        } else {
+            aggregatedData.allDependencies.filter { dependency ->
+                dependency.name.lowercase().contains(filterText) ||
+                        dependency.maintainers.any { it.name.lowercase().contains(filterText) }
+            }
+        }
         
         val maintainersCount = filteredMap.size
-        val packagesCount = filteredMap.values.flatten().distinctBy { it.name }.size
+        val packagesCount = filteredDependencies.distinctBy { it.name }.size
         val fundingCount = filteredMap.keys.count { it.fundingLinks.isNotEmpty() }
         
         statusLabel.text = "$maintainersCount maintainers • $packagesCount packages • $fundingCount with funding"
