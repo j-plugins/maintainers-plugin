@@ -9,8 +9,9 @@
     <resource-bundle>messages.MaintainersBundle</resource-bundle>
 
     <extensionPoints>
-        <extensionPoint name="maintainerProvider" interface="com.github.xepozz.maintainers.extension.MaintainerProvider"
-                        dynamic="true"/>
+        <extensionPoint
+                name="maintainerProvider" dynamic="true"
+                interface="com.github.xepozz.maintainers.extension.MaintainerProvider"/>
     </extensionPoints>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -26,5 +27,6 @@
 
     <extensions defaultExtensionNs="com.github.xepozz.maintainers">
         <maintainerProvider implementation="com.github.xepozz.maintainers.providers.composer.ComposerMaintainerProvider"/>
+        <maintainerProvider implementation="com.github.xepozz.maintainers.providers.npm.NpmMaintainerProvider"/>
     </extensions>
 </idea-plugin>
