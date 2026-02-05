@@ -10,26 +10,28 @@
 
 ## Maintainers
 
-Maintainers is an IntelliJ IDEA plugin that identifies project maintainers and dependencies' authors by parsing package manager files (`package.json`, `composer.json`, `go.mod`, etc.).
+You trust dozens of packages. Do you know who's behind them?
 
-It helps you discover who is behind the libraries you use and provides an easy way to support them.
+Maintainers plugin shows you the people and organizations behind every dependency in your project — their GitHub profiles, how many packages they maintain, and how to support them.
 
-### Features
+One abandoned package can break your build. One mass-resignation can tank your stack. Know your supply chain.
 
-- Maintainer Detection: Automatically scans your project for package manager files.
-- Contribution Impact: See how many packages each author maintains in your project.
-- Direct Sponsorship: Quick access to funding links like GitHub Sponsors and Open Collective.
+**What you get:**
 
-## Donation
+- Automatic parsing of lock files (`composer.lock` in PHP now, `npm`/`go`/`python` coming)
+- GitHub avatars and org icons for instant recognition
+- Two views: browse by package or by maintainer
+- Direct links to funding pages — sponsor the people who keep your code running
 
-Open-source tools can greatly improve workflows, helping developers and businesses save time and increase revenue.
-Many successful projects have been built on these tools, benefiting a wide community.
-However, maintaining and enhancing these resources requires continuous effort and investment.
+**Why it matters:**
 
-Support from the community helps keep these projects alive and ensures they remain useful for everyone.
-Donations play a key role in sustaining and improving these open-source initiatives.
+That mass layoff at a tech company? Some of those engineers maintained packages you depend on. That solo dev who burned out? Maybe they wrote your HTTP client.
 
-Chose the best option for you to say thank you:
+Maintainers plugin turns your dependency tree from a list of strings into a map of humans.
+
+## Support the Project
+
+If you find this plugin useful, you can support its development:
 
 [<img height="28" src="https://github.githubassets.com/assets/patreon-96b15b9db4b9.svg"> Patreon](https://patreon.com/xepozz)
 |
@@ -37,13 +39,14 @@ Chose the best option for you to say thank you:
 |
 [<img height="28" src="https://boosty.to/favicon.ico"> Boosty](https://boosty.to/xepozz)
 
+
 <!-- Plugin description end -->
 
 ## Installation
 
 - Using the IDE built-in plugin system:
 
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "maintainers-plugin"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Maintainers"</kbd> >
   <kbd>Install</kbd>
 
 - Using JetBrains Marketplace:
@@ -63,4 +66,3 @@ Chose the best option for you to say thank you:
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[docs:plugin-description]: https://plugins.jetbrains.com/docs/intellij/plugin-user-experience.html#plugin-description-and-presentation
