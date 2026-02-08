@@ -24,6 +24,7 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.SearchTextField
+import com.intellij.ui.TreeUIHelper
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
@@ -86,6 +87,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     init {
         setupTree()
+        setupSpeedSearch()
         setupToolbar()
         
         detailsPanel.setOnPackageSelected { packageName ->
@@ -137,6 +139,21 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
                 showEmptyState()
             }
         }
+    }
+
+    private fun setupSpeedSearch() {
+        TreeUIHelper.getInstance().installTreeSpeedSearch(tree, { path ->
+            var userObject = TreeUtil.getUserObject(path.lastPathComponent)
+            if (userObject is NodeDescriptor<*>) {
+                userObject = userObject.element
+            }
+            when (userObject) {
+                is com.github.xepozz.maintainers.toolWindow.tree.GroupHeader -> userObject.title
+                is Dependency -> userObject.name
+                is Maintainer -> userObject.name
+                else -> userObject?.toString() ?: ""
+            }
+        }, false)
     }
 
     private fun showEmptyState() {
