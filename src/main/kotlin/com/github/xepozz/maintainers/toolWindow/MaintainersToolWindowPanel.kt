@@ -89,7 +89,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         setupTree()
         setupSpeedSearch()
         setupToolbar()
-        
+
         detailsPanel.setOnPackageSelected { packageName ->
             selectDependency(packageName)
         }
@@ -97,7 +97,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val mainContentPanel = JPanel(BorderLayout())
         mainContentPanel.add(splitter, BorderLayout.CENTER)
         mainContentPanel.add(statusLabel, BorderLayout.SOUTH)
-        
+
         setContent(mainContentPanel)
 
         refresh()
@@ -149,6 +149,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             }
             when (userObject) {
                 is com.github.xepozz.maintainers.toolWindow.tree.GroupHeader -> userObject.title
+                is com.github.xepozz.maintainers.toolWindow.tree.PackageManagerGroup -> userObject.packageManager.name
                 is Dependency -> userObject.name
                 is Maintainer -> userObject.name
                 else -> userObject?.toString() ?: ""
@@ -216,6 +217,24 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
                 }
             })
             add(Separator())
+            add(
+                DefaultActionGroup(MaintainersBundle.message("action.view.options.text"), true)
+                    .apply {
+                        templatePresentation.icon = AllIcons.Actions.GroupBy
+                        add(Separator(MaintainersBundle.message("action.group.by.text")))
+                        add(object : ToggleAction(
+                            MaintainersBundle.message("action.group.by.package.manager.text"),
+                            MaintainersBundle.message("action.group.by.package.manager.description"),
+                            null
+                        ) {
+                            override fun isSelected(e: AnActionEvent): Boolean = treeStructure.groupByPackageManager
+                            override fun setSelected(e: AnActionEvent, state: Boolean) {
+                                treeStructure.groupByPackageManager = state
+                                structureModel.invalidateAsync()
+                            }
+                        })
+                    })
+            add(Separator())
             add(object : AnAction(
                 MaintainersBundle.message("action.settings.text"),
                 MaintainersBundle.message("action.settings.description"),
@@ -240,7 +259,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             rightPanel.add(it)
         }
         rightPanel.add(actionToolbar.component)
-        
+
         toolbarPanel.add(rightPanel, BorderLayout.EAST)
         toolbarPanel.border = JBUI.Borders.empty(2, 5)
 
@@ -255,7 +274,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
 
     private fun refresh() {
         aggregatedData = MaintainerProvider.getAggregatedData(project)
-        
+
         val activeManagers = aggregatedData.allDependencies.map { it.source }.distinct().sortedBy { it.name }
         if (managerPanel == null && activeManagers.isNotEmpty()) {
             val panel = PackageManagerFilterPanel(activeManagers) { manager, selected ->
@@ -273,7 +292,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val topMaintainers = maintainerMap.keys
             .sortedByDescending { it.packages.size }
             .take(3)
-        
+
         currentStats = MaintainersStats(maintainersCount, packagesCount, fundingCount, topMaintainers)
 
         treeStructure.updateData(maintainerMap, aggregatedData.allDependencies)
@@ -289,7 +308,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val filter = com.github.xepozz.maintainers.model.SearchFilter.parse(searchField.text)
         treeStructure.setFilter(filter)
         structureModel.invalidateAsync()
-        
+
         val filteredMap = aggregatedData.maintainerMap.filter { (maintainer, dependencies) ->
             matchesFilter(maintainer, dependencies, filter)
         }
@@ -297,30 +316,37 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
         val filteredDependencies = aggregatedData.allDependencies.filter { dependency ->
             matchesDependencyFilter(dependency, filter)
         }
-        
+
         val maintainersCount = filteredMap.size
         val packagesCount = filteredDependencies.distinctBy { it.name }.size
         val fundingCount = filteredMap.keys.count { it.fundingLinks.isNotEmpty() }
-        
+
         statusLabel.text = MaintainersBundle.message("toolwindow.status", maintainersCount, packagesCount, fundingCount)
     }
 
-    private fun matchesFilter(maintainer: Maintainer, dependencies: List<Dependency>, filter: com.github.xepozz.maintainers.model.SearchFilter): Boolean {
+    private fun matchesFilter(
+        maintainer: Maintainer,
+        dependencies: List<Dependency>,
+        filter: com.github.xepozz.maintainers.model.SearchFilter
+    ): Boolean {
         if (filter.fundingOnly && maintainer.fundingLinks.isEmpty()) return false
         if (filter.packageManagers.isNotEmpty() && !maintainer.packages.any { it.packageManager in filter.packageManagers }) return false
-        
+
         if (filter.textQuery.isEmpty()) return true
-        
-        return maintainer.name.lowercase().contains(filter.textQuery) || 
+
+        return maintainer.name.lowercase().contains(filter.textQuery) ||
                 dependencies.any { it.name.lowercase().contains(filter.textQuery) }
     }
 
-    private fun matchesDependencyFilter(dependency: Dependency, filter: com.github.xepozz.maintainers.model.SearchFilter): Boolean {
+    private fun matchesDependencyFilter(
+        dependency: Dependency,
+        filter: com.github.xepozz.maintainers.model.SearchFilter
+    ): Boolean {
         if (filter.fundingOnly && !dependency.maintainers.any { it.fundingLinks.isNotEmpty() }) return false
         if (filter.packageManagers.isNotEmpty() && dependency.source !in filter.packageManagers) return false
-        
+
         if (filter.textQuery.isEmpty()) return true
-        
+
         return dependency.name.lowercase().contains(filter.textQuery) ||
                 dependency.maintainers.any { it.name.lowercase().contains(filter.textQuery) }
     }
@@ -332,7 +358,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
                 if (userObject is NodeDescriptor<*>) {
                     userObject = userObject.element
                 }
-                
+
                 if (userObject is Dependency && userObject.name == packageName) {
                     return TreeVisitor.Action.INTERRUPT
                 }

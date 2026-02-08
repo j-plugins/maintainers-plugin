@@ -3,6 +3,7 @@ package com.github.xepozz.maintainers.toolWindow.tree
 import com.github.xepozz.maintainers.MaintainersBundle
 import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
+import com.github.xepozz.maintainers.model.PackageManager
 import com.github.xepozz.maintainers.model.SearchFilter
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
@@ -13,6 +14,7 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
     private var allDependencies: List<Dependency> = emptyList()
     private var filterText: String = ""
     private val root = Any()
+    var groupByPackageManager: Boolean = false
 
     fun updateData(newMap: Map<Maintainer, List<Dependency>>, allDeps: List<Dependency>) {
         maintainerMap = newMap
@@ -39,13 +41,30 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
             }
             is GroupHeader -> {
                 if (element.id == "dependencies") {
-                    getFilteredDependencies()
+                    val deps = getFilteredDependencies()
                         .distinctBy { it.name }
                         .sortedBy { it.name }
-                        .toTypedArray()
+
+                    if (groupByPackageManager) {
+                        deps.groupBy { it.source }
+                            .map { (pm, dependencies) ->
+                                PackageManagerGroup(pm, dependencies.size)
+                            }
+                            .sortedBy { it.packageManager.name }
+                            .toTypedArray()
+                    } else {
+                        deps.toTypedArray()
+                    }
                 } else {
                     getFilteredMap().keys.sortedByDescending { it.packages.size }.toTypedArray()
                 }
+            }
+            is PackageManagerGroup -> {
+                val deps = getFilteredDependencies()
+                    .filter { it.source == element.packageManager }
+                    .distinctBy { it.name }
+                    .sortedBy { it.name }
+                deps.toTypedArray()
             }
             is Dependency -> {
                 val filter = currentFilter
@@ -101,6 +120,7 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
                 val oldName = myName
                 myName = when (element) {
                     is GroupHeader -> element.title
+                    is PackageManagerGroup -> element.packageManager.name
                     is Dependency -> element.name
                     is Maintainer -> element.name
                     else -> element.toString()
@@ -114,3 +134,5 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
     override fun commit() {}
     override fun hasSomethingToCommit(): Boolean = false
 }
+
+data class PackageManagerGroup(val packageManager: PackageManager, val count: Int)
