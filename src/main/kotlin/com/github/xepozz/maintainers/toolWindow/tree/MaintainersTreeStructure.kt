@@ -5,6 +5,7 @@ import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.PackageManager
 import com.github.xepozz.maintainers.model.SearchFilter
+import com.github.xepozz.maintainers.services.MaintainersSettingsService
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.project.Project
@@ -14,8 +15,9 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
     private var allDependencies: List<Dependency> = emptyList()
     private var filterText: String = ""
     private val root = Any()
-    var groupByPackageManager: Boolean = false
-    var groupByPrefix: Boolean = false
+    private val settings = MaintainersSettingsService.getInstance(project)
+    var groupByPackageManager: Boolean by settings::groupByPackageManager
+    var groupByPrefix: Boolean by settings::groupByPrefix
 
     fun updateData(newMap: Map<Maintainer, List<Dependency>>, allDeps: List<Dependency>) {
         maintainerMap = newMap
