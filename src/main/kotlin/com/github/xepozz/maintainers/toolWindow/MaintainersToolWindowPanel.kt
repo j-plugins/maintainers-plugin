@@ -7,6 +7,7 @@ import com.github.xepozz.maintainers.model.Dependency
 import com.github.xepozz.maintainers.model.Maintainer
 import com.github.xepozz.maintainers.model.MaintainersStats
 import com.github.xepozz.maintainers.toolWindow.details.MaintainerDetailsPanel
+import com.github.xepozz.maintainers.toolWindow.details.PackageDetailsPanel
 import com.github.xepozz.maintainers.toolWindow.tree.MaintainersTreeCellRenderer
 import com.github.xepozz.maintainers.toolWindow.tree.MaintainersTreeStructure
 import com.intellij.icons.AllIcons
@@ -47,6 +48,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     private val asyncTreeModel = AsyncTreeModel(structureModel, this)
     private val tree = Tree(asyncTreeModel)
     private val detailsPanel = MaintainerDetailsPanel()
+    private val packageDetailsPanel = PackageDetailsPanel()
     private val closeActionToolbar = ActionManager.getInstance().createActionToolbar(
         "DetailsHeader",
         DefaultActionGroup(object : AnAction("Close", "Close details view", AllIcons.Actions.Close) {
@@ -94,6 +96,10 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             selectDependency(packageName)
         }
 
+        packageDetailsPanel.setOnMaintainerSelected { maintainer ->
+            selectMaintainer(maintainer)
+        }
+
         val mainContentPanel = JPanel(BorderLayout())
         mainContentPanel.add(splitter, BorderLayout.CENTER)
         mainContentPanel.add(statusLabel, BorderLayout.SOUTH)
@@ -126,15 +132,14 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             if (userObject is Maintainer) {
                 setDetailsVisible(true)
                 closeActionToolbar.component.isVisible = true
+                showMaintainerDetails()
                 val aggregated = aggregatedData.maintainerMap.keys.find { it.name == userObject.name } ?: userObject
                 detailsPanel.updateMaintainer(aggregated)
             } else if (userObject is Dependency) {
                 setDetailsVisible(true)
                 closeActionToolbar.component.isVisible = true
-                val maintainers = userObject.maintainers.map { author ->
-                    aggregatedData.maintainerMap.keys.find { it.name == author.name } ?: author
-                }
-                detailsPanel.updateMaintainers(maintainers)
+                showPackageDetails()
+                packageDetailsPanel.updatePackage(userObject, aggregatedData.maintainerMap)
             } else {
                 showEmptyState()
             }
@@ -161,12 +166,27 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
     private fun showEmptyState() {
         closeActionToolbar.component.isVisible = false
         val stats = currentStats ?: return
+        showMaintainerDetails()
         detailsPanel.showEmptyState(
             stats,
             onMaintainerClick = { maintainer ->
                 selectMaintainer(maintainer)
             }
         )
+    }
+
+    private fun showMaintainerDetails() {
+        detailsContainer.remove(packageDetailsPanel)
+        detailsContainer.add(detailsPanel, BorderLayout.CENTER)
+        detailsContainer.revalidate()
+        detailsContainer.repaint()
+    }
+
+    private fun showPackageDetails() {
+        detailsContainer.remove(detailsPanel)
+        detailsContainer.add(packageDetailsPanel, BorderLayout.CENTER)
+        detailsContainer.revalidate()
+        detailsContainer.repaint()
     }
 
     private fun selectMaintainer(maintainer: Maintainer) {
