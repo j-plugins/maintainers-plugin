@@ -36,6 +36,11 @@ class MaintainersTreeCellRenderer : ColoredTreeCellRenderer() {
                 append(" (${userObject.count})", SimpleTextAttributes.GRAYED_ATTRIBUTES)
                 icon = userObject.packageManager.icon
             }
+            is DependencyGroup -> {
+                append(userObject.title)
+                append(" (${userObject.count})", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                icon = AllIcons.Nodes.WebFolder
+            }
             is String -> {
                 append(userObject)
                 icon = if (userObject.startsWith("Dependencies")) AllIcons.Nodes.Package else AllIcons.General.User

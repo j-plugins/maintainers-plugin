@@ -30,7 +30,14 @@ data class Dependency(
     val source: PackageManager,
     val url: String? = null,
     val maintainers: List<Maintainer> = emptyList()
-)
+) {
+    val groupPrefix: String?
+        get() = when {
+            name.startsWith("@") && name.contains("/") -> name.substringBeforeLast("/")
+            name.contains("/") -> name.substringBefore("/")
+            else -> null
+        }
+}
 
 data class MaintainersStats(
     val maintainersCount: Int,

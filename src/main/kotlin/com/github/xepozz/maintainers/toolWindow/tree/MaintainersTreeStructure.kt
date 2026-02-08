@@ -15,6 +15,7 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
     private var filterText: String = ""
     private val root = Any()
     var groupByPackageManager: Boolean = false
+    var groupByPrefix: Boolean = false
 
     fun updateData(newMap: Map<Maintainer, List<Dependency>>, allDeps: List<Dependency>) {
         maintainerMap = newMap
@@ -45,13 +46,36 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
                         .distinctBy { it.name }
                         .sortedBy { it.name }
 
-                    if (groupByPackageManager) {
+                    if (groupByPackageManager && groupByPrefix) {
                         deps.groupBy { it.source }
                             .map { (pm, dependencies) ->
-                                PackageManagerGroup(pm, dependencies.size)
+                                PackageManagerGroup(pm, dependencies.size, true)
                             }
                             .sortedBy { it.packageManager.name }
                             .toTypedArray()
+                    } else if (groupByPackageManager) {
+                        deps.groupBy { it.source }
+                            .map { (pm, dependencies) ->
+                                PackageManagerGroup(pm, dependencies.size, false)
+                            }
+                            .sortedBy { it.packageManager.name }
+                            .toTypedArray()
+                    } else if (groupByPrefix) {
+                        val grouped = deps.groupBy { it.groupPrefix }
+                        val result = mutableListOf<Any>()
+                        
+                        // Items with prefix
+                        grouped.filter { it.key != null }
+                            .map { (prefix, dependencies) ->
+                                DependencyGroup(prefix!!, dependencies.size)
+                            }
+                            .sortedBy { it.title }
+                            .let { result.addAll(it) }
+                            
+                        // Items without prefix
+                        grouped[null]?.let { result.addAll(it) }
+                        
+                        result.toTypedArray()
                     } else {
                         deps.toTypedArray()
                     }
@@ -64,7 +88,28 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
                     .filter { it.source == element.packageManager }
                     .distinctBy { it.name }
                     .sortedBy { it.name }
-                deps.toTypedArray()
+                
+                if (element.nextGroupByPrefix) {
+                    val grouped = deps.groupBy { it.groupPrefix }
+                    val result = mutableListOf<Any>()
+                    grouped.filter { it.key != null }
+                        .map { (prefix, dependencies) ->
+                            DependencyGroup(prefix!!, dependencies.size)
+                        }
+                        .sortedBy { it.title }
+                        .let { result.addAll(it) }
+                    grouped[null]?.let { result.addAll(it) }
+                    result.toTypedArray()
+                } else {
+                    deps.toTypedArray()
+                }
+            }
+            is DependencyGroup -> {
+                getFilteredDependencies()
+                    .filter { it.groupPrefix == element.title }
+                    .distinctBy { it.name }
+                    .sortedBy { it.name }
+                    .toTypedArray()
             }
             is Dependency -> {
                 val filter = currentFilter
@@ -135,4 +180,5 @@ class MaintainersTreeStructure(private val project: Project) : AbstractTreeStruc
     override fun hasSomethingToCommit(): Boolean = false
 }
 
-data class PackageManagerGroup(val packageManager: PackageManager, val count: Int)
+data class PackageManagerGroup(val packageManager: PackageManager, val count: Int, val nextGroupByPrefix: Boolean = false)
+data class DependencyGroup(val title: String, val count: Int)

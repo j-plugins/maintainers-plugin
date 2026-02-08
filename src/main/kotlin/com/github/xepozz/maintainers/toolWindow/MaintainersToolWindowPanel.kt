@@ -150,6 +150,7 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
             when (userObject) {
                 is com.github.xepozz.maintainers.toolWindow.tree.GroupHeader -> userObject.title
                 is com.github.xepozz.maintainers.toolWindow.tree.PackageManagerGroup -> userObject.packageManager.name
+                is com.github.xepozz.maintainers.toolWindow.tree.DependencyGroup -> userObject.title
                 is Dependency -> userObject.name
                 is Maintainer -> userObject.name
                 else -> userObject?.toString() ?: ""
@@ -230,6 +231,17 @@ class MaintainersToolWindowPanel(private val project: Project) : SimpleToolWindo
                             override fun isSelected(e: AnActionEvent): Boolean = treeStructure.groupByPackageManager
                             override fun setSelected(e: AnActionEvent, state: Boolean) {
                                 treeStructure.groupByPackageManager = state
+                                structureModel.invalidateAsync()
+                            }
+                        })
+                        add(object : ToggleAction(
+                            MaintainersBundle.message("action.group.by.prefix.text"),
+                            MaintainersBundle.message("action.group.by.prefix.description"),
+                            null
+                        ) {
+                            override fun isSelected(e: AnActionEvent): Boolean = treeStructure.groupByPrefix
+                            override fun setSelected(e: AnActionEvent, state: Boolean) {
+                                treeStructure.groupByPrefix = state
                                 structureModel.invalidateAsync()
                             }
                         })
