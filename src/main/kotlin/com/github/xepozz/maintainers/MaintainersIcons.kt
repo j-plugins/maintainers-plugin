@@ -13,5 +13,7 @@ object MaintainersIcons {
     @JvmField
     val GO = IconLoader.getIcon("/icons/go/icon.svg", this::class.java)
     @JvmField
+    val JETBRAINS = IconLoader.getIcon("/icons/jetbrains/icon.svg", this::class.java)
+    @JvmField
     val MAINTAINERS = IconLoader.getIcon("/icons/maintainers/icon.svg", this::class.java)
 }

@@ -29,5 +29,6 @@
         <maintainerProvider implementation="com.github.xepozz.maintainers.providers.composer.ComposerMaintainerProvider"/>
         <maintainerProvider implementation="com.github.xepozz.maintainers.providers.npm.NpmMaintainerProvider"/>
         <maintainerProvider implementation="com.github.xepozz.maintainers.providers.go.GoMaintainerProvider"/>
+        <maintainerProvider implementation="com.github.xepozz.maintainers.providers.ide.IdeMaintainerProvider"/>
     </extensions>
 </idea-plugin>
