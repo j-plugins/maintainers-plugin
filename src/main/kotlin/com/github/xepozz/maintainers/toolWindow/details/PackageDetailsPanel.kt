@@ -13,7 +13,6 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.util.maximumWidth
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
@@ -64,6 +63,12 @@ class PackageDetailsPanel : JBScrollPane() {
         rootPanel.removeAll()
 
         rootPanel.add(createHeaderSection(dependency))
+
+        val labels = dependency.metadata?.labels
+        if (!labels.isNullOrEmpty()) {
+            rootPanel.add(createLabelsPanel(labels))
+        }
+
         rootPanel.add(createSeparator())
 
         rootPanel.add(createPackageInfoSection(dependency))
@@ -160,7 +165,6 @@ class PackageDetailsPanel : JBScrollPane() {
         panel.add(Box.createVerticalStrut(8))
         panel.add(createInfoRow(MaintainersBundle.message("package.details.info.version"), dependency.version))
         dependency.url?.let { url ->
-            // If it's a URL, we might want to show it as repository if it looks like one
             if (url.contains("github.com") || url.contains("gitlab.com") || url.contains("bitbucket.org")) {
                 val repoName = url.substringAfter("://").substringAfter("/")
                 panel.add(createInfoRow(MaintainersBundle.message("package.details.info.repository"), repoName.ifBlank { url }))
@@ -347,6 +351,25 @@ class PackageDetailsPanel : JBScrollPane() {
                     BrowserUtil.browse(fullUrl)
                 }
             })
+        }
+    }
+
+    private fun createLabelsPanel(labels: List<String>): JPanel {
+        return JPanel(FlowLayout(FlowLayout.LEFT, 6, 0)).apply {
+            isOpaque = false
+            alignmentX = Component.LEFT_ALIGNMENT
+            border = JBUI.Borders.emptyBottom(8)
+            labels.forEach { add(createBadge(it)) }
+        }
+    }
+
+    private fun createBadge(text: String): JBLabel {
+        return JBLabel(text).apply {
+            font = JBFont.small().asBold()
+            foreground = JBColor.namedColor("Label.infoForeground", JBColor(0x5A5D6B, 0xBBBBBB))
+            isOpaque = true
+            background = JBColor.namedColor("Tag.background", JBColor(0xEBECF0, 0x393B40))
+            border = JBUI.Borders.empty(2, 6)
         }
     }
 

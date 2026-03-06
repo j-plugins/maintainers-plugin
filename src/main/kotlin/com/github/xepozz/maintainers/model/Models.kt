@@ -24,12 +24,17 @@ data class Maintainer(
     val packages: List<PackageInfo> = emptyList()
 )
 
+interface DependencyMetadata {
+    val labels: List<String>
+}
+
 data class Dependency(
     val name: String,
     val version: String,
     val source: PackageManager,
     val url: String? = null,
-    val maintainers: List<Maintainer> = emptyList()
+    val maintainers: List<Maintainer> = emptyList(),
+    val metadata: DependencyMetadata? = null
 ) {
     val groupPrefix: String?
         get() = when {

@@ -2,24 +2,38 @@ package com.github.xepozz.maintainers.providers.ide
 
 import com.github.xepozz.maintainers.extension.MaintainerProvider
 import com.github.xepozz.maintainers.model.Dependency
+import com.github.xepozz.maintainers.model.DependencyMetadata
 import com.github.xepozz.maintainers.model.Maintainer
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.project.Project
+
+data class IdePluginMetadata(
+    val isBundled: Boolean,
+    val isEnabled: Boolean
+) : DependencyMetadata {
+    override val labels: List<String> = buildList {
+        if (isBundled) add("bundled")
+        if (!isEnabled) add("disabled")
+    }
+}
 
 class IdeMaintainerProvider : MaintainerProvider {
     override val packageManager = IdePackageManager
 
     override fun getDependencies(project: Project): Collection<Dependency> {
         return PluginManager.getPlugins()
-//            .filter { !it.isBundled && it.isEnabled }
             .map { descriptor ->
                 Dependency(
                     name = descriptor.name,
                     version = descriptor.version ?: "unknown",
                     source = packageManager,
                     url = descriptor.url ?: "https://plugins.jetbrains.com/plugin/index?xmlId=${descriptor.pluginId.idString}",
-                    maintainers = buildMaintainer(descriptor)
+                    maintainers = buildMaintainer(descriptor),
+                    metadata = IdePluginMetadata(
+                        isBundled = descriptor.isBundled,
+                        isEnabled = descriptor.isEnabled
+                    )
                 )
             }
     }

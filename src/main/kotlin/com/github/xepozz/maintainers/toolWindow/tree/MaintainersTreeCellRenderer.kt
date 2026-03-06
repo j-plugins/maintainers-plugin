@@ -47,6 +47,9 @@ class MaintainersTreeCellRenderer : ColoredTreeCellRenderer() {
             }
             is Dependency -> {
                 append(userObject.name)
+                userObject.metadata?.labels?.forEach { label ->
+                    append(" $label", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                }
                 icon = userObject.source.icon
             }
             is Maintainer -> {

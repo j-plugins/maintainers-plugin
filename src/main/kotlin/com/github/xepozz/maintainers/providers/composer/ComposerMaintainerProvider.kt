@@ -2,6 +2,7 @@ package com.github.xepozz.maintainers.providers.composer
 
 import com.github.xepozz.maintainers.extension.MaintainerProvider
 import com.github.xepozz.maintainers.model.Dependency
+import com.github.xepozz.maintainers.model.DependencyMetadata
 import com.github.xepozz.maintainers.model.FundingSource
 import com.github.xepozz.maintainers.model.Maintainer
 import com.google.gson.JsonArray
@@ -12,6 +13,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import java.io.InputStreamReader
+
+data class ComposerMetadata(
+    val isDev: Boolean
+) : DependencyMetadata {
+    override val labels: List<String> = if (isDev) listOf("dev") else emptyList()
+}
 
 class ComposerMaintainerProvider : MaintainerProvider {
     override val packageManager = ComposerPackageManager
@@ -34,6 +41,9 @@ class ComposerMaintainerProvider : MaintainerProvider {
 
         val packages = root.getAsJsonArray("packages") ?: JsonArray()
         val packagesDev = root.getAsJsonArray("packages-dev") ?: JsonArray()
+
+        val devPackageNames = mutableSetOf<String>()
+        packagesDev.forEach { if (it is JsonObject) it.get("name")?.asString?.let { name -> devPackageNames.add(name) } }
 
         val allPackages = mutableListOf<JsonObject>()
         packages.forEach { if (it is JsonObject) allPackages.add(it) }
@@ -73,7 +83,8 @@ class ComposerMaintainerProvider : MaintainerProvider {
                 version = version,
                 source = packageManager,
                 url = url,
-                maintainers = maintainers
+                maintainers = maintainers,
+                metadata = ComposerMetadata(isDev = name in devPackageNames)
             )
         }
     }

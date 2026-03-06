@@ -2,6 +2,7 @@ package com.github.xepozz.maintainers.providers.npm
 
 import com.github.xepozz.maintainers.extension.MaintainerProvider
 import com.github.xepozz.maintainers.model.Dependency
+import com.github.xepozz.maintainers.model.DependencyMetadata
 import com.github.xepozz.maintainers.model.FundingSource
 import com.github.xepozz.maintainers.model.Maintainer
 import com.google.gson.JsonElement
@@ -12,6 +13,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import java.io.InputStreamReader
+
+data class NpmMetadata(
+    val isDev: Boolean
+) : DependencyMetadata {
+    override val labels: List<String> = if (isDev) listOf("dev") else emptyList()
+}
 
 class NpmMaintainerProvider : MaintainerProvider {
     override val packageManager = NpmPackageManager
@@ -43,6 +50,7 @@ class NpmMaintainerProvider : MaintainerProvider {
 
             val version = element.get("version")?.asString ?: ""
             val resolved = element.get("resolved")?.asString
+            val isDev = element.get("dev")?.asBoolean == true
 
             val maintainers = emptyList<Maintainer>()
 
@@ -51,7 +59,8 @@ class NpmMaintainerProvider : MaintainerProvider {
                 version = version,
                 source = packageManager,
                 url = resolved,
-                maintainers = maintainers
+                maintainers = maintainers,
+                metadata = NpmMetadata(isDev = isDev)
             )
         }
     }
