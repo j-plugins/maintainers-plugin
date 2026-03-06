@@ -8,23 +8,28 @@ data class SearchFilter(
     val packageManagers: Set<PackageManager> = emptySet()
 ) {
     companion object {
-        private val PM_PATTERN = Regex("""pm:(\w+)""")
         private const val FUNDING_FILTER = "is:funding"
 
         fun parse(text: String): SearchFilter {
-            val pmNames = PM_PATTERN.findAll(text).map { it.groupValues[1] }.toSet()
-            val pms = MaintainerProvider.getAllPackageManagers()
-                .filter { pmNames.contains(it.name) }
-                .toSet()
-            val fundingOnly = text.contains(FUNDING_FILTER)
+            val allPms = MaintainerProvider.getAllPackageManagers()
+            val matchedPms = mutableSetOf<PackageManager>()
+            var cleanText = text
 
-            var cleanText = text.replace(FUNDING_FILTER, "")
-            pmNames.forEach { cleanText = cleanText.replace("pm:$it", "") }
+            for (pm in allPms.sortedByDescending { it.name.length }) {
+                val tag = "pm:${pm.name}"
+                if (cleanText.contains(tag)) {
+                    matchedPms.add(pm)
+                    cleanText = cleanText.replace(tag, "")
+                }
+            }
+
+            val fundingOnly = cleanText.contains(FUNDING_FILTER)
+            cleanText = cleanText.replace(FUNDING_FILTER, "")
 
             return SearchFilter(
                 textQuery = cleanText.trim().lowercase(),
                 fundingOnly = fundingOnly,
-                packageManagers = pms
+                packageManagers = matchedPms
             )
         }
     }
